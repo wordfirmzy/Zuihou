@@ -1,0 +1,31 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ "main" ]   # change if you use a different default branch
+  workflow_dispatch:        # let you run it manually
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # Uses game-ci to build Unity projects in CI.
+      - name: Build Android (APK)
+        uses: game-ci/unity-builder@v4
+        with:
+          unityVersion: 6000.2.7f2   # match your Unity version
+          targetPlatform: Android
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: build/Android
