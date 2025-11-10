@@ -1,0 +1,1770 @@
+{
+  "cards": [
+    {
+      "hanzi": "八",
+      "initial": "ㄅ",
+      "final": "ㄚ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "他",
+      "initial": "ㄊ",
+      "final": "ㄚ",
+      "tone": 1,
+      "compounds": [
+        "他们",
+        "他人"
+      ]
+    },
+    {
+      "hanzi": "沙",
+      "initial": "ㄕ",
+      "final": "ㄚ",
+      "tone": 1,
+      "compounds": [
+        "沙发"
+      ]
+    },
+    {
+      "hanzi": "发",
+      "initial": "ㄈ",
+      "final": "ㄚ",
+      "tone": 1,
+      "compounds": [
+        "沙发",
+        "头发",
+        "发生",
+        "开发",
+        "发出"
+      ]
+    },
+    {
+      "hanzi": "茶",
+      "initial": "ㄔ",
+      "final": "ㄚ",
+      "tone": 2,
+      "compounds": [
+        "茶几",
+        "茶店",
+        "绿茶",
+        "红茶"
+      ]
+    },
+    {
+      "hanzi": "打",
+      "initial": "ㄉ",
+      "final": "ㄚ",
+      "tone": 3,
+      "compounds": [
+        "打开"
+      ]
+    },
+    {
+      "hanzi": "大",
+      "initial": "ㄉ",
+      "final": "ㄚ",
+      "tone": 4,
+      "compounds": [
+        "大学",
+        "大小",
+        "大人"
+      ]
+    },
+    {
+      "hanzi": "怕",
+      "initial": "ㄆ",
+      "final": "ㄚ",
+      "tone": 4,
+      "compounds": [
+        "害怕"
+      ]
+    },
+    {
+      "hanzi": "开",
+      "initial": "ㄎ",
+      "final": "ㄞ",
+      "tone": 1,
+      "compounds": [
+        "开车",
+        "开店",
+        "开心",
+        "开发"
+      ]
+    },
+    {
+      "hanzi": "白",
+      "initial": "ㄅ",
+      "final": "ㄞ",
+      "tone": 2,
+      "compounds": [
+        "白菜",
+        "白天",
+        "白酒"
+      ]
+    },
+    {
+      "hanzi": "还",
+      "initial": "ㄏ",
+      "final": "ㄞ, ㄨㄢ",
+      "tone": 2,
+      "compounds": [
+        "还是",
+        "交还"
+      ]
+    },
+    {
+      "hanzi": "百",
+      "initial": "ㄅ",
+      "final": "ㄞ",
+      "tone": 3,
+      "compounds": [
+        "百家"
+      ]
+    },
+    {
+      "hanzi": "爱",
+      "initial": "",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "爱好",
+        "可爱"
+      ]
+    },
+    {
+      "hanzi": "菜",
+      "initial": "ㄘ",
+      "final": "ㄞ",
+      "tone": 4,
+      "compounds": [
+        "生菜",
+        "白菜",
+        "油菜",
+        "菜园",
+        "小菜",
+        "果菜",
+        "菜场"
+      ]
+    },
+    {
+      "hanzi": "害",
+      "initial": "ㄏ",
+      "final": "ㄞ",
+      "tone": 4,
+      "compounds": [
+        "害怕"
+      ]
+    },
+    {
+      "hanzi": "三",
+      "initial": "ㄙ",
+      "final": "ㄢ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "山",
+      "initial": "ㄕ",
+      "final": "ㄢ",
+      "tone": 1,
+      "compounds": [
+        "山下"
+      ]
+    },
+    {
+      "hanzi": "餐",
+      "initial": "ㄘ",
+      "final": "ㄢ",
+      "tone": 1,
+      "compounds": [
+        "餐桌",
+        "餐厅",
+        "快餐",
+        "中餐",
+        "西餐"
+      ]
+    },
+    {
+      "hanzi": "担",
+      "initial": "ㄉ",
+      "final": "ㄢ",
+      "tone": 1,
+      "compounds": [
+        "担心"
+      ]
+    },
+    {
+      "hanzi": "篮",
+      "initial": "ㄌ",
+      "final": "ㄢ",
+      "tone": 2,
+      "compounds": [
+        "篮球",
+        "篮子",
+        "花篮",
+        "上篮"
+      ]
+    },
+    {
+      "hanzi": "看",
+      "initial": "ㄎ",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "看书",
+        "看电视",
+        "看电影",
+        "看医生"
+      ]
+    },
+    {
+      "hanzi": "饭",
+      "initial": "ㄈ",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "吃饭",
+        "饭店"
+      ]
+    },
+    {
+      "hanzi": "汉",
+      "initial": "ㄏ",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "汉堡",
+        "汉语"
+      ]
+    },
+    {
+      "hanzi": "站",
+      "initial": "ㄓ",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "加油站"
+      ]
+    },
+    {
+      "hanzi": "张",
+      "initial": "ㄓ",
+      "final": "ㄤ",
+      "tone": 1,
+      "compounds": [
+        "紧张",
+        "张开",
+        "开张",
+        "张大",
+        "张飞"
+      ]
+    },
+    {
+      "hanzi": "商",
+      "initial": "ㄕ",
+      "final": "ㄤ",
+      "tone": 1,
+      "compounds": [
+        "商店",
+        "商场",
+        "商人"
+      ]
+    },
+    {
+      "hanzi": "芒",
+      "initial": "ㄇ",
+      "final": "ㄤ",
+      "tone": 2,
+      "compounds": [
+        "芒果"
+      ]
+    },
+    {
+      "hanzi": "堂",
+      "initial": "ㄊ",
+      "final": "ㄤ",
+      "tone": 2,
+      "compounds": [
+        "教堂",
+        "天堂"
+      ]
+    },
+    {
+      "hanzi": "房",
+      "initial": "ㄈ",
+      "final": "ㄤ",
+      "tone": 2,
+      "compounds": [
+        "房子",
+        "房间",
+        "厨房",
+        "房东"
+      ]
+    },
+    {
+      "hanzi": "场",
+      "initial": "ㄔ",
+      "final": "ㄤ",
+      "tone": 3,
+      "compounds": [
+        "机场",
+        "商场"
+      ]
+    },
+    {
+      "hanzi": "高",
+      "initial": "ㄍ",
+      "final": "ㄠ",
+      "tone": 1,
+      "compounds": [
+        "高兴"
+      ]
+    },
+    {
+      "hanzi": "超",
+      "initial": "ㄔ",
+      "final": "ㄠ",
+      "tone": 2,
+      "compounds": [
+        "超市"
+      ]
+    },
+    {
+      "hanzi": "早",
+      "initial": "ㄗ",
+      "final": "ㄠ",
+      "tone": 3,
+      "compounds": [
+        "早上",
+        "早餐",
+        "早饭"
+      ]
+    },
+    {
+      "hanzi": "好",
+      "initial": "ㄏ",
+      "final": "ㄠ",
+      "tone": 3,
+      "compounds": [
+        "爱好"
+      ]
+    },
+    {
+      "hanzi": "炒",
+      "initial": "ㄔ",
+      "final": "ㄠ",
+      "tone": 3,
+      "compounds": [
+        "炒饭",
+        "炒菜",
+        "炒面"
+      ]
+    },
+    {
+      "hanzi": "饱",
+      "initial": "ㄅ",
+      "final": "ㄠ",
+      "tone": 3,
+      "compounds": [
+        "吃饱"
+      ]
+    },
+    {
+      "hanzi": "堡",
+      "initial": "ㄅ",
+      "final": "ㄠ",
+      "tone": 3,
+      "compounds": [
+        "汉堡",
+        "城堡"
+      ]
+    },
+    {
+      "hanzi": "药",
+      "initial": "ㄧ",
+      "final": "ㄠ",
+      "tone": 4,
+      "compounds": [
+        "火药",
+        "药店",
+        "医药",
+        "中药",
+        "西药",
+        "药水",
+        "吃药"
+      ]
+    },
+    {
+      "hanzi": "傲",
+      "initial": "",
+      "final": "ㄠ",
+      "tone": 4,
+      "compounds": [
+        "骄傲"
+      ]
+    },
+    {
+      "hanzi": "车",
+      "initial": "ㄔ",
+      "final": "ㄜ",
+      "tone": 1,
+      "compounds": [
+        "开车",
+        "停车",
+        "停车场",
+        "火车"
+      ]
+    },
+    {
+      "hanzi": "喝",
+      "initial": "ㄏ",
+      "final": "ㄜ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "可",
+      "initial": "ㄎ",
+      "final": "ㄜ",
+      "tone": 3,
+      "compounds": [
+        "可乐"
+      ]
+    },
+    {
+      "hanzi": "渴",
+      "initial": "ㄎ",
+      "final": "ㄜ",
+      "tone": 3,
+      "compounds": []
+    },
+    {
+      "hanzi": "热",
+      "initial": "ㄖ",
+      "final": "ㄜ",
+      "tone": 4,
+      "compounds": [
+        "热水",
+        "热心"
+      ]
+    },
+    {
+      "hanzi": "饿",
+      "initial": "",
+      "final": "ㄜ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "客",
+      "initial": "ㄎ",
+      "final": "ㄜ",
+      "tone": 4,
+      "compounds": [
+        "客厅",
+        "客气"
+      ]
+    },
+    {
+      "hanzi": "乐",
+      "initial": "ㄌ,ㄩ",
+      "final": "ㄜ,ㄝ",
+      "tone": 4,
+      "compounds": [
+        "可乐",
+        "音乐"
+      ]
+    },
+    {
+      "hanzi": "黑",
+      "initial": "ㄏ",
+      "final": "ㄟ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "飞",
+      "initial": "ㄈ",
+      "final": "ㄟ",
+      "tone": 1,
+      "compounds": [
+        "飞机"
+      ]
+    },
+    {
+      "hanzi": "没",
+      "initial": "ㄇ",
+      "final": "ㄟ",
+      "tone": 2,
+      "compounds": [
+        "没有"
+      ]
+    },
+    {
+      "hanzi": "累",
+      "initial": "ㄌ",
+      "final": "ㄟ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "们",
+      "initial": "ㄇ",
+      "final": "ㄣ",
+      "tone": 0,
+      "compounds": [
+        "我们",
+        "你们",
+        "他们",
+        "人们"
+      ]
+    },
+    {
+      "hanzi": "人",
+      "initial": "ㄖ",
+      "final": "ㄣ",
+      "tone": 2,
+      "compounds": [
+        "人们",
+        "人家",
+        "客人",
+        "有人",
+        "人生",
+        "人间",
+        "大人",
+        "商人",
+        "家人",
+        "人心"
+      ]
+    },
+    {
+      "hanzi": "奋",
+      "initial": "ㄈ",
+      "final": "ㄣ",
+      "tone": 4,
+      "compounds": [
+        "兴奋"
+      ]
+    },
+    {
+      "hanzi": "生",
+      "initial": "ㄕ",
+      "final": "ㄥ",
+      "tone": 1,
+      "compounds": [
+        "医生",
+        "学生",
+        "生菜",
+        "发生",
+        "生气",
+        "花生",
+        "一生",
+        "出生",
+        "天生"
+      ]
+    },
+    {
+      "hanzi": "城",
+      "initial": "ㄔ",
+      "final": "ㄥ",
+      "tone": 2,
+      "compounds": [
+        "城市",
+        "城堡"
+      ]
+    },
+    {
+      "hanzi": "冷",
+      "initial": "ㄌ",
+      "final": "ㄥ",
+      "tone": 3,
+      "compounds": []
+    },
+    {
+      "hanzi": "二",
+      "initial": "",
+      "final": "ㄦ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "一",
+      "initial": "",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": [
+        "一生",
+        "一路"
+      ]
+    },
+    {
+      "hanzi": "七",
+      "initial": "ㄑ",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "吃",
+      "initial": "ㄔ",
+      "final": "ㄭ",
+      "tone": 1,
+      "compounds": [
+        "吃饭",
+        "吃饱"
+      ]
+    },
+    {
+      "hanzi": "西",
+      "initial": "ㄒ",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": [
+        "东西",
+        "西瓜",
+        "西红柿",
+        "西药",
+        "西医"
+      ]
+    },
+    {
+      "hanzi": "衣",
+      "initial": "",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": [
+        "衣服",
+        "衣柜",
+        "上衣"
+      ]
+    },
+    {
+      "hanzi": "医",
+      "initial": "",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": [
+        "医生",
+        "医药",
+        "医学",
+        "中医",
+        "医院",
+        "西医"
+      ]
+    },
+    {
+      "hanzi": "机",
+      "initial": "ㄐ",
+      "final": "ㄧ",
+      "tone": 1,
+      "compounds": [
+        "飞机",
+        "机场",
+        "手机",
+        "开机"
+      ]
+    },
+    {
+      "hanzi": "十",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 2,
+      "compounds": []
+    },
+    {
+      "hanzi": "时",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 2,
+      "compounds": [
+        "时间",
+        "小时",
+        "学时"
+      ]
+    },
+    {
+      "hanzi": "子",
+      "initial": "ㄗ",
+      "final": "ㄭ",
+      "tone": 3,
+      "compounds": [
+        "房子",
+        "桌子",
+        "院子",
+        "椅子",
+        "小子",
+        "面子"
+      ]
+    },
+    {
+      "hanzi": "你",
+      "initial": "ㄋ",
+      "final": "ㄧ",
+      "tone": 3,
+      "compounds": [
+        "你们"
+      ]
+    },
+    {
+      "hanzi": "几",
+      "initial": "ㄐ",
+      "final": "ㄧ",
+      "tone": 0,
+      "compounds": [
+        "茶几"
+      ]
+    },
+    {
+      "hanzi": "米",
+      "initial": "ㄇ",
+      "final": "ㄧ",
+      "tone": 3,
+      "compounds": [
+        "玉米",
+        "米饭"
+      ]
+    },
+    {
+      "hanzi": "椅",
+      "initial": "",
+      "final": "ㄧ",
+      "tone": 3,
+      "compounds": [
+        "椅子"
+      ]
+    },
+    {
+      "hanzi": "气",
+      "initial": "ㄑ",
+      "final": "ㄧ",
+      "tone": 4,
+      "compounds": [
+        "生气",
+        "客气"
+      ]
+    },
+    {
+      "hanzi": "四",
+      "initial": "ㄙ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "第",
+      "initial": "ㄉ",
+      "final": "ㄧ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "视",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": [
+        "电视"
+      ]
+    },
+    {
+      "hanzi": "柿",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": [
+        "西红柿"
+      ]
+    },
+    {
+      "hanzi": "市",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": [
+        "超市"
+      ]
+    },
+    {
+      "hanzi": "自",
+      "initial": "ㄗ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": [
+        "自行车"
+      ]
+    },
+    {
+      "hanzi": "地",
+      "initial": "ㄉ",
+      "final": "ㄜ,ㄧ",
+      "tone": 4,
+      "compounds": [
+        "地铁",
+        "地下"
+      ]
+    },
+    {
+      "hanzi": "室",
+      "initial": "ㄕ",
+      "final": "ㄭ",
+      "tone": 4,
+      "compounds": [
+        "卧室"
+      ]
+    },
+    {
+      "hanzi": "寂",
+      "initial": "ㄐ",
+      "final": "ㄧ",
+      "tone": 4,
+      "compounds": [
+        "寂寞"
+      ]
+    },
+    {
+      "hanzi": "加",
+      "initial": "ㄐ",
+      "final": "ㄧㄚ",
+      "tone": 1,
+      "compounds": [
+        "加油站"
+      ]
+    },
+    {
+      "hanzi": "家",
+      "initial": "ㄐ",
+      "final": "ㄧㄚ",
+      "tone": 1,
+      "compounds": [
+        "国家"
+      ]
+    },
+    {
+      "hanzi": "下",
+      "initial": "ㄒ",
+      "final": "ㄧㄚ",
+      "tone": 4,
+      "compounds": [
+        "山下",
+        "地下"
+      ]
+    },
+    {
+      "hanzi": "天",
+      "initial": "ㄊ",
+      "final": "ㄧㄢ",
+      "tone": 1,
+      "compounds": [
+        "聊天",
+        "天气",
+        "白天",
+        "天下",
+        "天堂",
+        "天地",
+        "天生",
+        "天上",
+        "上天"
+      ]
+    },
+    {
+      "hanzi": "千",
+      "initial": "ㄑ",
+      "final": "ㄧㄢ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "边",
+      "initial": "ㄅ",
+      "final": "ㄧㄢ",
+      "tone": 1,
+      "compounds": [
+        "一边"
+      ]
+    },
+    {
+      "hanzi": "间",
+      "initial": "ㄐ",
+      "final": "ㄧㄢ",
+      "tone": 1,
+      "compounds": [
+        "房间",
+        "时间"
+      ]
+    },
+    {
+      "hanzi": "电",
+      "initial": "ㄉ",
+      "final": "ㄧㄢ",
+      "tone": 4,
+      "compounds": [
+        "电视",
+        "电视柜"
+      ]
+    },
+    {
+      "hanzi": "面",
+      "initial": "ㄇ",
+      "final": "ㄧㄢ",
+      "tone": 4,
+      "compounds": [
+        "面条"
+      ]
+    },
+    {
+      "hanzi": "店",
+      "initial": "ㄉ",
+      "final": "ㄧㄢ",
+      "tone": 4,
+      "compounds": [
+        "饭店"
+      ]
+    },
+    {
+      "hanzi": "香",
+      "initial": "ㄒ",
+      "final": "ㄧㄤ",
+      "tone": 1,
+      "compounds": [
+        "香蕉"
+      ]
+    },
+    {
+      "hanzi": "想",
+      "initial": "ㄒ",
+      "final": "ㄧㄤ",
+      "tone": 3,
+      "compounds": []
+    },
+    {
+      "hanzi": "蕉",
+      "initial": "ㄐ",
+      "final": "ㄧㄠ",
+      "tone": 1,
+      "compounds": [
+        "香蕉"
+      ]
+    },
+    {
+      "hanzi": "骄",
+      "initial": "ㄐ",
+      "final": "ㄧㄠ",
+      "tone": 1,
+      "compounds": [
+        "骄傲"
+      ]
+    },
+    {
+      "hanzi": "交",
+      "initial": "ㄐ",
+      "final": "ㄧㄠ",
+      "tone": 1,
+      "compounds": [
+        "公交车",
+        "交还"
+      ]
+    },
+    {
+      "hanzi": "条",
+      "initial": "ㄊ",
+      "final": "ㄧㄠ",
+      "tone": 2,
+      "compounds": [
+        "面条",
+        "薯条",
+        "教条"
+      ]
+    },
+    {
+      "hanzi": "聊",
+      "initial": "ㄌ",
+      "final": "ㄧㄠ",
+      "tone": 2,
+      "compounds": [
+        "无聊",
+        "聊天"
+      ]
+    },
+    {
+      "hanzi": "小",
+      "initial": "ㄒ",
+      "final": "ㄧㄠ",
+      "tone": 3,
+      "compounds": [
+        "大小",
+        "小学",
+        "小心",
+        "小时",
+        "小吃",
+        "小子",
+        "小米",
+        "小人"
+      ]
+    },
+    {
+      "hanzi": "校",
+      "initial": "ㄐ,ㄒ",
+      "final": "ㄧㄠ",
+      "tone": 4,
+      "compounds": [
+        "学校",
+        "校园",
+        "校对"
+      ]
+    },
+    {
+      "hanzi": "教",
+      "initial": "ㄐ",
+      "final": "ㄧㄠ",
+      "tone": 4,
+      "compounds": [
+        "教堂",
+        "教学",
+        "教室",
+        "教条",
+        "家教"
+      ]
+    },
+    {
+      "hanzi": "铁",
+      "initial": "ㄊ",
+      "final": "ㄧㄝ",
+      "tone": 3,
+      "compounds": [
+        "地铁"
+      ]
+    },
+    {
+      "hanzi": "心",
+      "initial": "ㄒ",
+      "final": "ㄧㄣ",
+      "tone": 1,
+      "compounds": [
+        "小心",
+        "担心",
+        "中心",
+        "心中",
+        "热心"
+      ]
+    },
+    {
+      "hanzi": "音",
+      "initial": "",
+      "final": "ㄧㄣ",
+      "tone": 1,
+      "compounds": [
+        "音乐"
+      ]
+    },
+    {
+      "hanzi": "阴",
+      "initial": "",
+      "final": "ㄧㄣ",
+      "tone": 1,
+      "compounds": [
+        "阴天"
+      ]
+    },
+    {
+      "hanzi": "紧",
+      "initial": "ㄐ",
+      "final": "ㄧㄣ",
+      "tone": 3,
+      "compounds": [
+        "紧张"
+      ]
+    },
+    {
+      "hanzi": "近",
+      "initial": "ㄐ",
+      "final": "ㄧㄣ",
+      "tone": 4,
+      "compounds": [
+        "附近"
+      ]
+    },
+    {
+      "hanzi": "听",
+      "initial": "ㄊ",
+      "final": "ㄧㄥ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "厅",
+      "initial": "ㄊ",
+      "final": "ㄧㄥ",
+      "tone": 1,
+      "compounds": [
+        "客厅",
+        "餐厅"
+      ]
+    },
+    {
+      "hanzi": "晴",
+      "initial": "ㄑ",
+      "final": "ㄧㄥ",
+      "tone": 2,
+      "compounds": [
+        "晴天"
+      ]
+    },
+    {
+      "hanzi": "苹",
+      "initial": "ㄆ",
+      "final": "ㄧㄥ",
+      "tone": 2,
+      "compounds": [
+        "苹果"
+      ]
+    },
+    {
+      "hanzi": "停",
+      "initial": "ㄊ",
+      "final": "ㄧㄥ",
+      "tone": 2,
+      "compounds": [
+        "停车场"
+      ]
+    },
+    {
+      "hanzi": "影",
+      "initial": "",
+      "final": "ㄧㄥ",
+      "tone": 3,
+      "compounds": [
+        "电影"
+      ]
+    },
+    {
+      "hanzi": "兴",
+      "initial": "ㄒ",
+      "final": "ㄧㄥ",
+      "tone": 4,
+      "compounds": [
+        "高兴",
+        "兴奋"
+      ]
+    },
+    {
+      "hanzi": "应",
+      "initial": "",
+      "final": "ㄧㄥ",
+      "tone": 0,
+      "compounds": [
+        "应用",
+        "应有",
+        "一应",
+        "对应"
+      ]
+    },
+    {
+      "hanzi": "球",
+      "initial": "ㄑ",
+      "final": "ㄧㄡ",
+      "tone": 2,
+      "compounds": [
+        "篮球"
+      ]
+    },
+    {
+      "hanzi": "九",
+      "initial": "ㄐ",
+      "final": "ㄧㄡ",
+      "tone": 3,
+      "compounds": []
+    },
+    {
+      "hanzi": "久",
+      "initial": "ㄐ",
+      "final": "ㄧㄡ",
+      "tone": 3,
+      "compounds": [
+        "多久"
+      ]
+    },
+    {
+      "hanzi": "酒",
+      "initial": "ㄐ",
+      "final": "ㄧㄡ",
+      "tone": 3,
+      "compounds": [
+        "酒店",
+        "喝酒",
+        "红酒",
+        "白酒"
+      ]
+    },
+    {
+      "hanzi": "六",
+      "initial": "ㄌ",
+      "final": "ㄧㄡ",
+      "tone": 4,
+      "compounds": []
+    },
+    {
+      "hanzi": "卧",
+      "initial": "ㄨ",
+      "final": "ㄛ",
+      "tone": 1,
+      "compounds": [
+        "卧室"
+      ]
+    },
+    {
+      "hanzi": "我",
+      "initial": "ㄨ",
+      "final": "ㄛ",
+      "tone": 3,
+      "compounds": [
+        "我们"
+      ]
+    },
+    {
+      "hanzi": "寞",
+      "initial": "ㄇ",
+      "final": "ㄛ",
+      "tone": 4,
+      "compounds": [
+        "寂寞"
+      ]
+    },
+    {
+      "hanzi": "中",
+      "initial": "ㄓ",
+      "final": "ㄨㄥ",
+      "tone": 1,
+      "compounds": [
+        "中餐",
+        "高中",
+        "中心",
+        "心中",
+        "土中",
+        "中学",
+        "中医",
+        "中药"
+      ]
+    },
+    {
+      "hanzi": "东",
+      "initial": "ㄉ",
+      "final": "ㄨㄥ",
+      "tone": 1,
+      "compounds": [
+        "东西",
+        "中东",
+        "房东"
+      ]
+    },
+    {
+      "hanzi": "葱",
+      "initial": "ㄘ",
+      "final": "ㄨㄥ",
+      "tone": 1,
+      "compounds": []
+    },
+    {
+      "hanzi": "公",
+      "initial": "ㄍ",
+      "final": "ㄨㄥ",
+      "tone": 1,
+      "compounds": [
+        "公交车",
+        "公寓",
+        "公园",
+        "公开"
+      ]
+    },
+    {
+      "hanzi": "红",
+      "initial": "ㄏ",
+      "final": "ㄨㄥ",
+      "tone": 2,
+      "compounds": [
+        "红豆",
+        "红茶",
+        "红酒"
+      ]
+    },
+    {
+      "hanzi": "用",
+      "initial": "ㄩ",
+      "final": "ㄥ",
+      "tone": 4,
+      "compounds": [
+        "应用",
+        "有用",
+        "用心",
+        "用人",
+        "公用",
+        "租用"
+      ]
+    },
+    {
+      "hanzi": "头",
+      "initial": "ㄊ",
+      "final": "ㄡ",
+      "tone": 2,
+      "compounds": [
+        "床头柜",
+        "头发",
+        "心头",
+        "山头",
+        "头子",
+        "头上",
+        "床头"
+      ]
+    },
+    {
+      "hanzi": "油",
+      "initial": "ㄧ",
+      "final": "ㄡ",
+      "tone": 2,
+      "compounds": [
+        "加油站",
+        "油菜"
+      ]
+    },
+    {
+      "hanzi": "楼",
+      "initial": "ㄌ",
+      "final": "ㄡ",
+      "tone": 2,
+      "compounds": [
+        "楼上",
+        "楼下"
+      ]
+    },
+    {
+      "hanzi": "手",
+      "initial": "ㄕ",
+      "final": "ㄡ",
+      "tone": 3,
+      "compounds": [
+        "手机",
+        "手中"
+      ]
+    },
+    {
+      "hanzi": "有",
+      "initial": "ㄧ",
+      "final": "ㄡ",
+      "tone": 3,
+      "compounds": [
+        "没有"
+      ]
+    },
+    {
+      "hanzi": "狗",
+      "initial": "ㄍ",
+      "final": "ㄡ",
+      "tone": 3,
+      "compounds": [
+        "热狗"
+      ]
+    },
+    {
+      "hanzi": "走",
+      "initial": "ㄗ",
+      "final": "ㄡ",
+      "tone": 3,
+      "compounds": [
+        "走路"
+      ]
+    },
+    {
+      "hanzi": "豆",
+      "initial": "ㄉ",
+      "final": "ㄡ",
+      "tone": 4,
+      "compounds": [
+        "土豆",
+        "红豆"
+      ]
+    },
+    {
+      "hanzi": "肉",
+      "initial": "ㄖ",
+      "final": "ㄡ",
+      "tone": 4,
+      "compounds": [
+        "五花肉"
+      ]
+    },
+    {
+      "hanzi": "出",
+      "initial": "ㄔ",
+      "final": "ㄨ",
+      "tone": 1,
+      "compounds": [
+        "出租车",
+        "出发",
+        "发出"
+      ]
+    },
+    {
+      "hanzi": "书",
+      "initial": "ㄕ",
+      "final": "ㄨ",
+      "tone": 1,
+      "compounds": [
+        "书柜",
+        "书桌"
+      ]
+    },
+    {
+      "hanzi": "舒",
+      "initial": "ㄕ",
+      "final": "ㄨ",
+      "tone": 1,
+      "compounds": [
+        "舒服"
+      ]
+    },
+    {
+      "hanzi": "租",
+      "initial": "ㄗ",
+      "final": "ㄨ",
+      "tone": 1,
+      "compounds": [
+        "出租车"
+      ]
+    },
+    {
+      "hanzi": "服",
+      "initial": "ㄈ",
+      "final": "ㄨ",
+      "tone": 2,
+      "compounds": [
+        "衣服"
+      ]
+    },
+    {
+      "hanzi": "无",
+      "initial": "",
+      "final": "ㄨ",
+      "tone": 2,
+      "compounds": [
+        "无聊"
+      ]
+    },
+    {
+      "hanzi": "厨",
+      "initial": "ㄔ",
+      "final": "ㄨ",
+      "tone": 2,
+      "compounds": [
+        "厨房",
+        "大厨"
+      ]
+    },
+    {
+      "hanzi": "土",
+      "initial": "ㄊ",
+      "final": "ㄨ",
+      "tone": 3,
+      "compounds": [
+        "土豆",
+        "土中"
+      ]
+    },
+    {
+      "hanzi": "五",
+      "initial": "",
+      "final": "ㄨ",
+      "tone": 3,
+      "compounds": [
+        "五花肉"
+      ]
+    },
+    {
+      "hanzi": "薯",
+      "initial": "ㄕ",
+      "final": "ㄨ",
+      "tone": 3,
+      "compounds": [
+        "薯条"
+      ]
+    },
+    {
+      "hanzi": "附",
+      "initial": "ㄈ",
+      "final": "ㄨ",
+      "tone": 4,
+      "compounds": [
+        "附近"
+      ]
+    },
+    {
+      "hanzi": "路",
+      "initial": "ㄌ",
+      "final": "ㄨ",
+      "tone": 4,
+      "compounds": [
+        "走路",
+        "路上",
+        "一路",
+        "电路",
+        "路面",
+        "大路",
+        "路人",
+        "土路",
+        "开路",
+        "心路"
+      ]
+    },
+    {
+      "hanzi": "语",
+      "initial": "",
+      "final": "ㄩ",
+      "tone": 3,
+      "compounds": [
+        "汉语",
+        "语气"
+      ]
+    },
+    {
+      "hanzi": "雨",
+      "initial": "",
+      "final": "ㄩ",
+      "tone": 3,
+      "compounds": [
+        "下雨"
+      ]
+    },
+    {
+      "hanzi": "绿",
+      "initial": "ㄌ",
+      "final": "ㄩ",
+      "tone": 4,
+      "compounds": [
+        "绿茶"
+      ]
+    },
+    {
+      "hanzi": "玉",
+      "initial": "",
+      "final": "ㄩ",
+      "tone": 4,
+      "compounds": [
+        "玉米"
+      ]
+    },
+    {
+      "hanzi": "寓",
+      "initial": "",
+      "final": "ㄩ",
+      "tone": 4,
+      "compounds": [
+        "公寓"
+      ]
+    },
+    {
+      "hanzi": "花",
+      "initial": "ㄏ",
+      "final": "ㄨㄚ",
+      "tone": 1,
+      "compounds": [
+        "花店",
+        "五花肉",
+        "花园"
+      ]
+    },
+    {
+      "hanzi": "瓜",
+      "initial": "ㄍ",
+      "final": "ㄨㄚ",
+      "tone": 1,
+      "compounds": [
+        "西瓜",
+        "黄瓜"
+      ]
+    },
+    {
+      "hanzi": "快",
+      "initial": "ㄎ",
+      "final": "ㄨㄞ",
+      "tone": 4,
+      "compounds": [
+        "快乐",
+        "加快",
+        "飞快",
+        "快餐"
+      ]
+    },
+    {
+      "hanzi": "船",
+      "initial": "ㄔ",
+      "final": "ㄨㄢ",
+      "tone": 2,
+      "compounds": []
+    },
+    {
+      "hanzi": "园",
+      "initial": "ㄩ",
+      "final": "ㄢ",
+      "tone": 2,
+      "compounds": [
+        "花园",
+        "公园"
+      ]
+    },
+    {
+      "hanzi": "远",
+      "initial": "ㄩ",
+      "final": "ㄢ",
+      "tone": 3,
+      "compounds": []
+    },
+    {
+      "hanzi": "院",
+      "initial": "ㄩ",
+      "final": "ㄢ",
+      "tone": 4,
+      "compounds": [
+        "学院",
+        "医院",
+        "院子"
+      ]
+    },
+    {
+      "hanzi": "黄",
+      "initial": "ㄏ",
+      "final": "ㄨㄤ",
+      "tone": 2,
+      "compounds": [
+        "黄瓜"
+      ]
+    },
+    {
+      "hanzi": "床",
+      "initial": "ㄔ",
+      "final": "ㄨㄤ",
+      "tone": 2,
+      "compounds": [
+        "床头柜"
+      ]
+    },
+    {
+      "hanzi": "学",
+      "initial": "ㄒ",
+      "final": "ㄩㄝ",
+      "tone": 2,
+      "compounds": [
+        "学校",
+        "学生",
+        "大学",
+        "教学",
+        "学院",
+        "中学",
+        "小学",
+        "医学",
+        "上学",
+        "下学",
+        "开学",
+        "学时",
+        "学人"
+      ]
+    },
+    {
+      "hanzi": "水",
+      "initial": "ㄕ",
+      "final": "ㄨㄟ",
+      "tone": 3,
+      "compounds": [
+        "水果",
+        "药水",
+        "开水",
+        "汽水"
+      ]
+    },
+    {
+      "hanzi": "对",
+      "initial": "ㄉ",
+      "final": "ㄨㄟ",
+      "tone": 4,
+      "compounds": [
+        "对人",
+        "对手",
+        "对面",
+        "面对",
+        "对白"
+      ]
+    },
+    {
+      "hanzi": "柜",
+      "initial": "ㄐ",
+      "final": "ㄩ",
+      "tone": 4,
+      "compounds": [
+        "电视柜",
+        "床头柜",
+        "柜子"
+      ]
+    },
+    {
+      "hanzi": "多",
+      "initial": "ㄉ",
+      "final": "ㄨㄛ",
+      "tone": 1,
+      "compounds": [
+        "多少"
+      ]
+    },
+    {
+      "hanzi": "卓",
+      "initial": "ㄓ",
+      "final": "ㄨㄛ",
+      "tone": 1,
+      "compounds": [
+        "书桌",
+        "桌子",
+        "餐桌"
+      ]
+    },
+    {
+      "hanzi": "国",
+      "initial": "ㄍ",
+      "final": "ㄨㄛ",
+      "tone": 2,
+      "compounds": [
+        "国家",
+        "中国"
+      ]
+    },
+    {
+      "hanzi": "火",
+      "initial": "ㄏ",
+      "final": "ㄨㄛ",
+      "tone": 3,
+      "compounds": [
+        "火车",
+        "火药"
+      ]
+    },
+    {
+      "hanzi": "果",
+      "initial": "ㄍ",
+      "final": "ㄨㄛ",
+      "tone": 3,
+      "compounds": [
+        "水果"
+      ]
+    },
+    {
+      "hanzi": "抽两張",
+      "type": "Effect",
+      "effect": "DrawTwoToneLinked",
+      "tones": [1,2,3,4],
+      "count": 3
+    },
+
+    {
+      "hanzi": "变调",
+      "type": "Effect",
+      "effect": "WildToneSetter",
+      "count": 8
+    }
+  ]
+}
