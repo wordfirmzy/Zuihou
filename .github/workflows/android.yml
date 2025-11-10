@@ -1,31 +1,105 @@
-name: Android Build
+name: Android (Unity Cloud Build)
 
 on:
   push:
-    branches: [ "main" ]   # change if you use a different default branch
-  workflow_dispatch:        # let you run it manually
+    branches: [ "main" ]        # change if your default branch differs
+  workflow_dispatch:            # allow manual runs from the Actions tab
 
 jobs:
-  build-android:
+  build-android-ucb:
     runs-on: ubuntu-latest
 
+    # Fill these with your real IDs (see notes below)
+    env:
+      UNITY_ORG_ID: ${{ secrets.UNITY_ORG_ID }}           # e.g. "my-org-1234"
+      UNITY_PROJECT_ID: ${{ secrets.UNITY_PROJECT_ID }}   # GUID from Dashboard
+      UCB_BUILD_TARGET: ${{ secrets.UCB_BUILD_TARGET }}   # e.g. "android-dev"
+      UNITY_API_KEY: ${{ secrets.UNITY_API_KEY }}         # Build Automation API key
+
     steps:
-      - name: Checkout
+      - name: Checkout (LFS enabled)
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      # Uses game-ci to build Unity projects in CI.
-      - name: Build Android (APK)
-        uses: game-ci/unity-builder@v4
-        with:
-          unityVersion: 6000.2.7f2   # match your Unity version
-          targetPlatform: Android
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      - name: Trigger Cloud Build
+        id: trigger
+        run: |
+          echo "Triggering Unity Cloud Build…"
+          CREATE_URL="https://build-api.cloud.unity3d.com/api/v1/orgs/${UNITY_ORG_ID}/projects/${UNITY_PROJECT_ID}/buildtargets/${UCB_BUILD_TARGET}/builds"
+          RESP=$(curl -sS -X POST "$CREATE_URL" \
+            -H "Authorization: Basic ${UNITY_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
 
-      - name: Upload artifact
+          echo "Response: $RESP"
+          BUILD_NUMBER=$(echo "$RESP" | jq -r '.build' )
+          if [ -z "$BUILD_NUMBER" ] || [ "$BUILD_NUMBER" = "null" ]; then
+            echo "::error::Could not parse build number from Cloud Build response."
+            exit 1
+          fi
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Poll Build Status
+        id: poll
+        run: |
+          BUILD_NUMBER="${{ steps.trigger.outputs.build_number }}"
+          STATUS_URL="https://build-api.cloud.unity3d.com/api/v1/orgs/${UNITY_ORG_ID}/projects/${UNITY_PROJECT_ID}/buildtargets/${UCB_BUILD_TARGET}/builds/${BUILD_NUMBER}"
+          echo "Polling build #$BUILD_NUMBER…"
+
+          # Poll for up to ~30 minutes (60 * 30s)
+          for i in {1..60}; do
+            RESP=$(curl -sS -H "Authorization: Basic ${UNITY_API_KEY}" "$STATUS_URL")
+            STATUS=$(echo "$RESP" | jq -r '.buildStatus')
+            echo "Status: $STATUS"
+
+            if [ "$STATUS" = "success" ]; then
+              echo "status=success" >> $GITHUB_OUTPUT
+              break
+            elif [ "$STATUS" = "queued" ] || [ "$STATUS" = "sentToBuilder" ] || [ "$STATUS" = "started" ] || [ "$STATUS" = "restarted" ]; then
+              sleep 30
+            else
+              echo "::error::Cloud Build failed or stopped. Response:"
+              echo "$RESP"
+              exit 1
+            fi
+          done
+
+          if [ "${{ steps.poll.outputs.status }}" != "success" ]; then
+            echo "::error::Timed out waiting for Cloud Build."
+            exit 1
+          fi
+
+      - name: Download Artifact URL list
+        id: list
+        run: |
+          BUILD_NUMBER="${{ steps.trigger.outputs.build_number }}"
+          ARTS_URL="https://build-api.cloud.unity3d.com/api/v1/orgs/${UNITY_ORG_ID}/projects/${UNITY_PROJECT_ID}/buildtargets/${UCB_BUILD_TARGET}/builds/${BUILD_NUMBER}/artifacts"
+          RESP=$(curl -sS -H "Authorization: Basic ${UNITY_API_KEY}" "$ARTS_URL")
+          echo "Artifacts JSON:"
+          echo "$RESP"
+          # Grab the first file URL
+          DL_URL=$(echo "$RESP" | jq -r '.[0].downloadUrl')
+          FILE_NAME=$(echo "$RESP" | jq -r '.[0].filename')
+          if [ -z "$DL_URL" ] || [ "$DL_URL" = "null" ]; then
+            echo "::error::Could not find artifact download URL."
+            exit 1
+          fi
+          echo "url=$DL_URL" >> $GITHUB_OUTPUT
+          echo "file=$FILE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Fetch Artifact
+        run: |
+          URL="${{ steps.list.outputs.url }}"
+          FILE="${{ steps.list.outputs.file }}"
+          echo "Downloading $FILE"
+          curl -L "$URL" -o "$FILE"
+          ls -lh
+
+      - name: Upload Artifact to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: android-build
-          path: build/Android
+          path: |
+            *.apk
+            *.aab
