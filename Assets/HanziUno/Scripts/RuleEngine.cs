@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 public static class RuleEngine
 {
@@ -38,20 +39,19 @@ public static class RuleEngine
                         if (pr.tone != 0 && tr.tone == pr.tone)
                             return MatchContext.Ok("effect", $"Draw 2 (tone-linked: {pr.tone}).", tr, pr);
                     return MatchContext.Fail("Draw-2 must match the top card's tone.");
+
                 case EffectType.WildToneSetter:
                     // always legal
                     return MatchContext.Ok("effect", "Wild tone setter.");
             }
         }
 
-        // HANZI RULES (keep your existing matching)
+        // HANZI RULES
         if (top.type == CardType.Hanzi && play.type == CardType.Hanzi)
         {
-            // Compound (bidirectional)
-            bool compound =
-                (play.compounds != null && play.compounds.Contains(top.hanzi)) ||
-                (top.compounds  != null && top.compounds.Contains(play.hanzi));
-            if (compound)
+            // COMPOUNDS: accept if play+top or top+play equals any listed compound
+            // on EITHER card (A+B or B+A).
+            if (CompoundMatch(top, play))
                 return MatchContext.Compound(top.hanzi, play.hanzi);
 
             foreach (var tr in top.AllReadings())
@@ -69,7 +69,7 @@ public static class RuleEngine
                     tr.final == pr.final)
                     return MatchContext.Ok("final", $"Finals match ({pr.final}).", tr, pr);
 
-                // Finals terminal
+                // Finals terminal (e.g. ㄧㄠ ends with ㄠ)
                 var tTail = LastZhuyinSymbol(tr.final);
                 var pTail = LastZhuyinSymbol(pr.final);
                 if (!string.IsNullOrEmpty(tTail) && tTail == pTail)
@@ -87,6 +87,10 @@ public static class RuleEngine
         return MatchContext.Fail("Illegal move.");
     }
 
+    /// <summary>
+    /// Returns the last zhuyin symbol in a final string, skipping tone marks and separators.
+    /// Used for terminal-final matches (e.g. ㄧㄠ ends with ㄠ).
+    /// </summary>
     public static string LastZhuyinSymbol(string zhuyin)
     {
         if (string.IsNullOrWhiteSpace(zhuyin)) return null;
@@ -94,17 +98,79 @@ public static class RuleEngine
         {
             char c = zhuyin[i];
             if (char.IsWhiteSpace(c) || c == '-' || c == '/' || c == '·') continue;
-            if (c == '\u02D9' || c == '\u02CA' || c == '\u02C7' || c == '\u02CB') continue; // tone marks
+            // tone marks
+            if (c == '\u02D9' || c == '\u02CA' || c == '\u02C7' || c == '\u02CB') continue;
+            // zhuyin range
             if (c >= '\u3105' && c <= '\u312F') return c.ToString();
         }
         return null;
     }
 
-    // Helper for tone locks
+    /// <summary>
+    /// Helper for tone locks.
+    /// </summary>
     public static bool HasTone(Card c, int tone)
     {
         if (c == null || tone <= 0) return false;
         foreach (var r in c.AllReadings()) if (r.tone == tone) return true;
         return false;
+    }
+
+    // ===== COMPOUND HELPERS =====
+
+    /// <summary>
+    /// Returns true if the two cards form a legal compound according to either card's
+    /// compound list. Checks both play+top and top+play (A+B and B+A).
+    /// 
+    /// Examples:
+    ///   top = "们", play = "你"
+    ///   play+top = "你们"  -> matches if "你们" is listed in either card's compounds.
+    /// </summary>
+    private static bool CompoundMatch(Card top, Card play)
+    {
+        if (top == null || play == null) return false;
+        if (top.compounds == null && play.compounds == null) return false;
+
+        var a = (play.hanzi ?? string.Empty).Trim();
+        var b = (top.hanzi  ?? string.Empty).Trim();
+        if (a.Length == 0 || b.Length == 0) return false;
+
+        // Both possible combined forms
+        string playPlusTop = NormalizeHanzi(a + b); // A+B, e.g. "你们"
+        string topPlusPlay = NormalizeHanzi(b + a); // B+A, e.g. "们你"
+
+        // Check against each card's compound list; either card may list the compound.
+        if (play.compounds != null)
+        {
+            if (Listed(playPlusTop, play.compounds) || Listed(topPlusPlay, play.compounds))
+                return true;
+        }
+
+        if (top.compounds != null)
+        {
+            if (Listed(playPlusTop, top.compounds) || Listed(topPlusPlay, top.compounds))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool Listed(string candidate, IEnumerable<string> list)
+    {
+        candidate = NormalizeHanzi(candidate);
+        foreach (var s in list)
+        {
+            if (NormalizeHanzi(s) == candidate)
+                return true;
+        }
+        return false;
+    }
+
+    private static string NormalizeHanzi(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return string.Empty;
+        // Remove spaces and trim; if you ever add other normalizations (full-width, punctuation),
+        // this is the place.
+        return s.Replace(" ", "").Trim();
     }
 }

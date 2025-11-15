@@ -167,6 +167,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
+    Android: com.wordfirmzy.zuihou
     Standalone: com.DefaultCompany.2D-URP
   buildNumber:
     Standalone: 0
@@ -508,7 +509,10 @@ PlayerSettings:
   m_BuildTargetGroupLightmapSettings: []
   m_BuildTargetGroupLoadStoreDebugModeSettings: []
   m_BuildTargetNormalMapEncoding: []
-  m_BuildTargetDefaultTextureCompressionFormat: []
+  m_BuildTargetDefaultTextureCompressionFormat:
+  - serializedVersion: 3
+    m_BuildTarget: Android
+    m_Formats: 01000000
   playModeTestRunnerEnabled: 0
   runPlayModeTestAsEditModeTest: 0
   actionOnDotNetUnhandledException: 1
@@ -876,7 +880,7 @@ PlayerSettings:
   cloudProjectId: 4c7de976-c85f-453a-942f-1ce3fb0012ef
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Hanzi Uno
+  projectName: Zuihou
   organizationId: unity_e84248afd56280284aa7
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0

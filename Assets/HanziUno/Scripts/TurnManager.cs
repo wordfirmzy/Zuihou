@@ -3,6 +3,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+public enum PlayerKind
+{
+    LocalHuman,
+    Bot
+}
+
 public class TurnManager : MonoBehaviour
 {
     [Header("Center / Discard")]
@@ -23,19 +29,36 @@ public class TurnManager : MonoBehaviour
     [Header("Tone Picker UI")]
     public TonePickerUI tonePicker; // assign the TonePickerPanel (with TonePickerUI)
 
-    // State
+    // ---- State ----
+    // These two lists are kept for backwards-compatibility and are used as the backing
+    // hand lists for the first two PlayerState entries (You + Bot).
     public List<Card> playerHand = new();
     public List<Card> botHand = new();
-    public int turn = 0; // 0=player, 1=bot
+
+    // Generic multi-player model (up to 7 later)
+    List<PlayerState> players = new();
+    PlayerOrder turnOrder;
+
+    // Exposed for any existing code that reads it; kept in sync with turnOrder.CurrentIndex.
+    public int turn = 0; // index in players list; 0 = local human in current setup
+
     bool playing = false;
 
-    Card previousTop = null;                    // card under current top (for effect-neutral matching)
+    // Card under current top (used when an effect sits on top and there is no tone lock)
+    Card previousTop = null;
+
     RuleEngine.MatchContext lastMatchContext = null;
 
     // When >0, the NEXT player must play a card that has this tone (bypasses normal matching)
     int pendingToneLock = 0;
 
     const string HILITE = "#21A0AA";
+
+    // Convenience: who is currently active?
+    PlayerState CurrentPlayer =>
+        (turnOrder != null && players.Count > 0 && turnOrder.CurrentIndex >= 0 && turnOrder.CurrentIndex < players.Count)
+            ? players[turnOrder.CurrentIndex]
+            : null;
 
     void Start() => NewGame();
 
@@ -44,14 +67,30 @@ public class TurnManager : MonoBehaviour
         var cards = CardsDatabase.Load();
         if (cards == null || cards.Count == 0)
         {
-            Debug.LogError("No cards loaded. Check Resources/cards.json");
+            Debug.LogError("No cards loaded.\nCheck Resources/cards.json");
             return;
         }
 
         deck.Init(cards);
-        playerHand.Clear(); botHand.Clear();
 
-        for (int i = 0; i < 8; i++) { playerHand.Add(deck.Draw()); botHand.Add(deck.Draw()); }
+        // Clear backing hand lists
+        playerHand.Clear();
+        botHand.Clear();
+
+        // Build player list (currently: You + Bot, but ready for more seats)
+        players.Clear();
+        players.Add(new PlayerState(PlayerKind.LocalHuman, "You", playerHandPanel, playerHand));
+        players.Add(new PlayerState(PlayerKind.Bot, "Bot",  botHandPanel,  botHand));
+
+        // Deal starting hands: 8 cards per player
+        for (int i = 0; i < 8; i++)
+        {
+            foreach (var p in players)
+            {
+                var c = deck.Draw();
+                if (c != null) p.hand.Add(c);
+            }
+        }
 
         previousTop = null;
         lastMatchContext = null;
@@ -60,8 +99,11 @@ public class TurnManager : MonoBehaviour
         var starter = deck.Draw();
         if (starter != null) deck.Play(starter);
 
-        turn = 0;
+        // Turn order: start at seat 0 (local human)
+        turnOrder = new PlayerOrder(players.Count, 0);
+        turn = turnOrder.CurrentIndex;
         playing = true;
+
         SetMessage("Your turn: play a matching card or Draw");
         RefreshUI();
         UpdateCenterUI();
@@ -71,28 +113,36 @@ public class TurnManager : MonoBehaviour
 
     public void DrawButton()
     {
-        if (!playing || turn != 0) return;
+        if (!playing) return;
+        var current = CurrentPlayer;
+        if (current == null || current.kind != PlayerKind.LocalHuman) return;
 
         var c = deck.Draw();
-        if (c != null) playerHand.Add(c);
-        lastMatchContext = null;
+        if (c != null) current.hand.Add(c);
 
-        // Drawing consumes and clears any constraint
+        // Drawing consumes & clears any constraint
+        lastMatchContext = null;
         pendingToneLock = 0;
 
-        SetMessage("You drew a card. Bot's turn…");
-        turn = 1;
+        SetMessage("You drew a card.\nNext player's turn…");
+
+        AdvanceTurn(1);
+
         RefreshUI();
         UpdateCenterUI();
-        Invoke(nameof(BotTurn), 0.6f);
+        TriggerAutoTurnIfNeeded();
     }
 
     public void TryPlayFromPlayer(int index)
     {
-        if (!playing || turn != 0) return;
-        if (index < 0 || index >= playerHand.Count) return;
+        if (!playing) return;
+        var current = CurrentPlayer;
+        if (current == null || current.kind != PlayerKind.LocalHuman) return;
 
-        var card = playerHand[index];
+        var hand = current.hand;
+        if (index < 0 || index >= hand.Count) return;
+
+        var card = hand[index];
 
         // 1) Tone lock bypass: only check tone
         if (pendingToneLock > 0)
@@ -103,25 +153,35 @@ public class TurnManager : MonoBehaviour
                 return;
             }
 
-            var ctx = new RuleEngine.MatchContext { ok = true, by = "tone", topReading = new Reading("", "", pendingToneLock) };
+            var ctx = new RuleEngine.MatchContext
+            {
+                ok = true,
+                by = "tone",
+                topReading = new Reading("", "", pendingToneLock)
+            };
+
             pendingToneLock = 0; // satisfied
-            ApplyPlay(index, card, ctx, isPlayer: true, deferTonePick: false);
+            ApplyPlay(current, index, card, ctx, deferTonePick: false);
             return;
         }
 
-        // 2) Wild is always legal (if player plays it, we’ll ask tone unless it's the last card)
+        // 2) Wild is always legal (if it’s your last card you win immediately; otherwise we’ll pick tone)
         if (card.type == CardType.Effect && card.effect == EffectType.WildToneSetter)
         {
-            ApplyPlay(index, card, null, isPlayer: true, deferTonePick: true);
+            ApplyPlay(current, index, card, null, deferTonePick: true);
             return;
         }
 
-        // 3) Normal matching, but if an effect is on top, compare to previousTop
+        // 3) Normal matching — but if an effect is on top and no tone lock, match against previousTop
         var matchTarget = TopForMatching();
         var res = RuleEngine.CanPlayOn(matchTarget, card);
-        if (!res.ok) { SetMessage($"Can't play {CardLabel(card)}: {res.reason}"); return; }
+        if (!res.ok)
+        {
+            SetMessage($"Can't play {CardLabel(card)}: {res.reason}");
+            return;
+        }
 
-        ApplyPlay(index, card, res, isPlayer: true, deferTonePick: false);
+        ApplyPlay(current, index, card, res, deferTonePick: false);
     }
 
     // Which card should rules match against right now?
@@ -139,62 +199,73 @@ public class TurnManager : MonoBehaviour
 
     // ----- APPLY -----
 
-    void ApplyPlay(int handIndex, Card card, RuleEngine.MatchContext res, bool isPlayer, bool deferTonePick)
+    void ApplyPlay(PlayerState actor, int handIndex, Card card, RuleEngine.MatchContext res, bool deferTonePick)
     {
+        if (actor == null) return;
+
+        // Remember what was on the pile before this play
         var top = deck.Top;
-        previousTop = top;           // remember what was on the pile before this play
+        previousTop = top;
+
         lastMatchContext = res;
 
-        // remove & place
-        if (isPlayer) playerHand.RemoveAt(handIndex);
-        else          botHand.RemoveAt(handIndex);
+        // Remove from hand and place onto discard
+        actor.hand.RemoveAt(handIndex);
         deck.Play(card);
 
         // ===== Immediate win checks before any deferred UI =====
-        if (isPlayer && playerHand.Count == 0)
+        if (actor.hand.Count == 0)
         {
             // If last card is Wild, we do NOT block on choosing a tone — you win now.
             playing = false;
             pendingToneLock = 0;
-            SetMessage("You win!");
+
+            if (actor.kind == PlayerKind.LocalHuman)
+                SetMessage("You win!");
+            else
+                SetMessage($"{actor.displayName} wins!");
+
             RefreshUI();
             UpdateCenterUI();
             return;
         }
-        if (!isPlayer && botHand.Count == 0)
-        {
-            playing = false;
-            pendingToneLock = 0;
-            SetMessage("Bot wins!");
-            RefreshUI();
-            UpdateCenterUI();
-            return;
-        }
+
+        // Track whether this play skips the next seat
+        bool skipNextSeat = false;
 
         // ===== EFFECTS =====
         if (card.type == CardType.Effect)
         {
             if (card.effect == EffectType.DrawTwoToneLinked)
             {
-                // Opponent draws 2 and is skipped
-                var d1 = deck.Draw(); var d2 = deck.Draw();
-                if (turn == 0) { if (d1!=null) botHand.Add(d1); if (d2!=null) botHand.Add(d2); }
-                else           { if (d1!=null) playerHand.Add(d1); if (d2!=null) playerHand.Add(d2); }
+                // Next player draws 2 and is skipped
+                int targetIndex = turnOrder.PeekOffset(1);
+                var target = (targetIndex >= 0 && targetIndex < players.Count) ? players[targetIndex] : null;
 
-                // Clear tone lock; subsequent matching will reference previousTop via TopForMatching().
+                var d1 = deck.Draw();
+                var d2 = deck.Draw();
+
+                if (target != null)
+                {
+                    if (d1 != null) target.hand.Add(d1);
+                    if (d2 != null) target.hand.Add(d2);
+                }
+
+                // Clear tone lock; subsequent matching will reference previousTop via TopForMatching()
                 pendingToneLock = 0;
 
-                // Skip opponent (current player goes again)
-                turn = 1 - turn; // to opponent
-                turn = 1 - turn; // back to current
-                SetMessage($"{(isPlayer ? "You" : "Bot")} played Draw-2. {(isPlayer ? "Bot" : "You")} drew 2 and was skipped.");
+                skipNextSeat = true;
+
+                string actorLabel = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+                string targetLabel = (target != null && target.kind == PlayerKind.LocalHuman) ? "You" : target?.displayName ?? "Next player";
+                SetMessage($"{actorLabel} played Draw-2.\n{targetLabel} drew 2 and was skipped.");
             }
             else if (card.effect == EffectType.WildToneSetter)
             {
-                if (deferTonePick && isPlayer)
+                if (deferTonePick && actor.kind == PlayerKind.LocalHuman)
                 {
                     // Only ask for tone if it wasn't your last card (we already returned above if last)
-                    drawButton.interactable = false;
+                    if (drawButton) drawButton.interactable = false;
                     if (playerHandPanel) playerHandPanel.SetInteractable(false);
 
                     if (tonePicker != null)
@@ -203,76 +274,90 @@ public class TurnManager : MonoBehaviour
                         {
                             pendingToneLock = Mathf.Clamp(tone, 1, 4);
 
-                            drawButton.interactable = true;
+                            if (drawButton) drawButton.interactable = true;
                             if (playerHandPanel) playerHandPanel.SetInteractable(true);
 
-                            SetMessage($"Tone set to {pendingToneLock}. Opponent must play tone {pendingToneLock}.");
-                            turn = 1;
+                            SetMessage($"Tone set to {pendingToneLock}.\nNext player must play tone {pendingToneLock}.");
+
+                            AdvanceTurn(1);
                             RefreshUI();
                             UpdateCenterUI();
-                            Invoke(nameof(BotTurn), 0.6f);
+                            TriggerAutoTurnIfNeeded();
                         });
 
                         RefreshUI();
                         UpdateCenterUI();
-                        return; // wait for callback
+                        return; // wait for picker callback
                     }
                     else
                     {
+                        // Fallback if picker not wired
                         pendingToneLock = 1;
                         SetMessage($"(No tone picker wired) Tone set to 1.");
                     }
                 }
-                else if (!isPlayer) // Bot wild → choose tone heuristically
+                else if (actor.kind == PlayerKind.Bot) // Bot wild → choose tone heuristically
                 {
-                    int t = ChooseBotTone();
+                    int t = ChooseBotTone(actor.hand);
                     pendingToneLock = (t >= 1 && t <= 4) ? t : 1;
-                    SetMessage($"Bot set tone to {pendingToneLock}. You must play tone {pendingToneLock}.");
+                    SetMessage($"Bot set tone to {pendingToneLock}.\nYou must play tone {pendingToneLock}.");
                 }
             }
         }
 
-        // pass turn (unless we’re in tone-picking defer path)
-        if (playing && !(card.type == CardType.Effect && card.effect == EffectType.WildToneSetter && deferTonePick && isPlayer))
-        {
-            turn = isPlayer ? 1 : 0;
-            if (!isPlayer) SetMessage("Bot played a card.");
-        }
+        // ----- Decide whose turn is next -----
+        if (!playing) return;
+
+        // Advance by 2 if we skip the next seat (Draw-2 / skip effects), else by 1
+        AdvanceTurn(skipNextSeat ? 2 : 1);
 
         RefreshUI();
         UpdateCenterUI();
-
-        if (playing && isPlayer && !(card.type == CardType.Effect && card.effect == EffectType.WildToneSetter && deferTonePick))
-            Invoke(nameof(BotTurn), 0.6f);
+        TriggerAutoTurnIfNeeded();
     }
 
     // ----- BOT -----
 
     void BotTurn()
     {
-        if (!playing || turn != 1) return;
+        if (!playing || turnOrder == null || players.Count == 0) return;
+
+        var actor = CurrentPlayer;
+        if (actor == null || actor.kind != PlayerKind.Bot) return;
+
+        var botHandLocal = actor.hand;
 
         // Tone-lock against bot
         if (pendingToneLock > 0)
         {
-            for (int i = 0; i < botHand.Count; i++)
+            for (int i = 0; i < botHandLocal.Count; i++)
             {
-                var c = botHand[i];
+                var c = botHandLocal[i];
                 if (RuleEngine.HasTone(c, pendingToneLock))
                 {
-                    var ctx = new RuleEngine.MatchContext { ok = true, by = "tone", topReading = new Reading("", "", pendingToneLock) };
+                    var ctx = new RuleEngine.MatchContext
+                    {
+                        ok = true,
+                        by = "tone",
+                        topReading = new Reading("", "", pendingToneLock)
+                    };
                     pendingToneLock = 0;
-                    ApplyPlay(i, c, ctx, isPlayer: false, deferTonePick: false);
+                    ApplyPlay(actor, i, c, ctx, deferTonePick: false);
                     return;
                 }
             }
+
             // No card satisfies → draw and end bot’s turn (lock clears)
-            var d = deck.Draw(); if (d != null) botHand.Add(d);
+            var d = deck.Draw();
+            if (d != null) botHandLocal.Add(d);
             pendingToneLock = 0;
-            SetMessage("Bot drew (tone lock). Your turn.");
-            turn = 0;
+
+            SetMessage("Bot drew (tone lock).\nNext player's turn.");
+            AdvanceTurn(1);
+
             RefreshUI();
             UpdateCenterUI();
+            TriggerAutoTurnIfNeeded();
             return;
         }
 
@@ -280,54 +365,80 @@ public class TurnManager : MonoBehaviour
         var matchTarget = TopForMatching();
 
         // Try Draw-2 first if legal
-        for (int i = 0; i < botHand.Count; i++)
+        for (int i = 0; i < botHandLocal.Count; i++)
         {
-            var c = botHand[i];
+            var c = botHandLocal[i];
             if (c.type == CardType.Effect && c.effect == EffectType.DrawTwoToneLinked)
             {
                 var res = RuleEngine.CanPlayOn(matchTarget, c);
-                if (res.ok) { ApplyPlay(i, c, res, isPlayer: false, deferTonePick: false); return; }
+                if (res.ok)
+                {
+                    ApplyPlay(actor, i, c, res, deferTonePick: false);
+                    return;
+                }
             }
         }
 
         // Try Wild (always legal)
-        for (int i = 0; i < botHand.Count; i++)
+        for (int i = 0; i < botHandLocal.Count; i++)
         {
-            var c = botHand[i];
+            var c = botHandLocal[i];
             if (c.type == CardType.Effect && c.effect == EffectType.WildToneSetter)
             {
-                ApplyPlay(i, c, new RuleEngine.MatchContext { ok = true, by = "effect", reason = "Wild tone setter." }, isPlayer: false, deferTonePick: false);
+                ApplyPlay(actor, i, c, new RuleEngine.MatchContext
+                {
+                    ok = true,
+                    by = "effect",
+                    reason = "Wild tone setter."
+                }, deferTonePick: false);
                 return;
             }
         }
 
         // Else, any Hanzi that’s legal
-        for (int i = 0; i < botHand.Count; i++)
+        for (int i = 0; i < botHandLocal.Count; i++)
         {
-            var c = botHand[i];
+            var c = botHandLocal[i];
             if (c.type != CardType.Hanzi) continue;
+
             var res = RuleEngine.CanPlayOn(matchTarget, c);
-            if (res.ok) { ApplyPlay(i, c, res, isPlayer: false, deferTonePick: false); return; }
+            if (res.ok)
+            {
+                ApplyPlay(actor, i, c, res, deferTonePick: false);
+                return;
+            }
         }
 
         // Else draw
-        var d2 = deck.Draw(); if (d2 != null) botHand.Add(d2);
-        SetMessage("Bot drew a card. Your turn.");
-        turn = 0;
+        var d2 = deck.Draw();
+        if (d2 != null) botHandLocal.Add(d2);
+
+        SetMessage("Bot drew a card.\nNext player's turn.");
+        AdvanceTurn(1);
+
         RefreshUI();
         UpdateCenterUI();
+        TriggerAutoTurnIfNeeded();
     }
 
-    int ChooseBotTone()
+    int ChooseBotTone(List<Card> hand)
     {
-        // simple heuristic: most frequent tone in bot’s hand (fallback 1)
+        // simple heuristic: most frequent tone in this bot's hand (fallback 1)
         var counts = new int[6];
-        foreach (var c in botHand)
+        foreach (var c in hand)
             foreach (var r in c.AllReadings())
-                if (r.tone >= 1 && r.tone <= 4) counts[r.tone]++;
+                if (r.tone >= 1 && r.tone <= 4)
+                    counts[r.tone]++;
 
-        int best = 1; int bestC = -1;
-        for (int t = 1; t <= 4; t++) if (counts[t] > bestC) { bestC = counts[t]; best = t; }
+        int best = 1;
+        int bestC = -1;
+        for (int t = 1; t <= 4; t++)
+            if (counts[t] > bestC)
+            {
+                bestC = counts[t];
+                best = t;
+            }
+
         return best;
     }
 
@@ -335,9 +446,15 @@ public class TurnManager : MonoBehaviour
 
     void RefreshUI()
     {
+        // Seat 0 is the local player in current setup
         playerHandPanel?.Render(playerHand, i => TryPlayFromPlayer(i));
         botHandPanel?.RenderFaceDown(botHand.Count);
-        if (drawButton) drawButton.interactable = (turn == 0 && playing);
+
+        if (drawButton)
+        {
+            var cur = CurrentPlayer;
+            drawButton.interactable = playing && cur != null && cur.kind == PlayerKind.LocalHuman;
+        }
     }
 
     void UpdateCenterUI()
@@ -346,50 +463,58 @@ public class TurnManager : MonoBehaviour
         if (discardPreviousView)
         {
             if (previousTop != null) discardPreviousView.Bind(previousTop, -1, null);
-            else discardPreviousView.BindFaceDown(-1);
+            else                     discardPreviousView.BindFaceDown(-1);
+
             var cgPrev = discardPreviousView.GetComponent<CanvasGroup>();
             if (cgPrev) cgPrev.alpha = previousTop != null ? 0.6f : 0f;
         }
+
         // Current
         var top = deck.Top;
         if (discardCurrentView)
         {
             if (top != null) discardCurrentView.Bind(top, -1, null);
-            else discardCurrentView.BindFaceDown(-1);
+            else             discardCurrentView.BindFaceDown(-1);
+
             var cgTop = discardCurrentView.GetComponent<CanvasGroup>();
             if (cgTop) cgTop.alpha = 1f;
         }
+
         // Details
         RenderTopDetails(top, lastMatchContext);
     }
 
     void RenderTopDetails(Card top, RuleEngine.MatchContext match)
     {
-        // First, call out tone-lock if any
+        // Tone lock line
         if (matchRuleText)
         {
-            if (pendingToneLock > 0) matchRuleText.SetText($"Tone lock: <b><color={HILITE}>{pendingToneLock}</color></b>");
+            if (pendingToneLock > 0)
+                matchRuleText.SetText($"Tone lock: {pendingToneLock}");
             else if (match != null && match.ok && !string.IsNullOrEmpty(match.by))
                 matchRuleText.SetText(match.by == "terminal" && !string.IsNullOrEmpty(match.terminalSymbol)
-                    ? $"Matched by: <b><color={HILITE}>{match.by}</color></b> ({match.terminalSymbol})"
-                    : $"Matched by: <b><color={HILITE}>{match.by}</color></b>");
-            else matchRuleText.SetText("");
+                    ? $"Matched by: {match.by} ({match.terminalSymbol})"
+                    : $"Matched by: {match.by}");
+            else
+                matchRuleText.SetText("");
         }
 
-        // Effects on top
+        // Top card details
         if (top != null && top.type == CardType.Effect)
         {
             if (topDetailText)
             {
                 if (top.effect == EffectType.DrawTwoToneLinked)
                 {
-                    int t = 0; foreach (var r in top.AllReadings()) { t = r.tone; break; }
-                    topDetailText.SetText($"Top: <b><color={HILITE}>Draw-2</color></b>  {(t>=1 && t<=4 ? $"(tone {t})" : "")}");
+                    int t = 0;
+                    foreach (var r in top.AllReadings()) { t = r.tone; break; }
+                    // Be explicit that matching compares against previous while an effect is on top.
+                    var prevLabel = previousTop != null ? $" (matching against previous: {previousTop.hanzi})" : "";
+                    topDetailText.SetText($"Top: Draw-2 {(t >= 1 && t <= 4 ? $"(tone {t})" : "")}{prevLabel}");
                 }
                 else
                 {
-                    // FIX: ensure string interpolation
-                    topDetailText.SetText($"Top: <b><color={HILITE}>Wild</color></b> (set tone)");
+                    topDetailText.SetText("Top: Wild (set tone)");
                 }
             }
             return;
@@ -398,59 +523,110 @@ public class TurnManager : MonoBehaviour
         // Default (hanzi or empty)
         if (top == null)
         {
-            if (topDetailText) topDetailText.SetText("initials: -   finals: -   tones: -");
+            if (topDetailText) topDetailText.SetText("initials: -  finals: -  tones: -");
             return;
         }
 
         var (inis, fins, tones) = top.DistinctReadingSets();
-        string Hi(string s) => $"<b><color={HILITE}>{s}</color></b>";
 
-        var initialsRendered = new List<string>(inis);
-        var finalsRendered   = new List<string>(fins);
-        var tonesRendered    = new List<string>();
-        foreach (var t in tones) tonesRendered.Add(t.ToString());
+        string ii = inis.Count > 0 ? string.Join("/", inis) : "-";
+        string ff = fins.Count > 0 ? string.Join("/", fins) : "-";
+        string tt = tones.Count > 0 ? string.Join("/", tones) : "-";
 
-        if (match != null && match.ok)
+        if (topDetailText) topDetailText.SetText($"initials: {ii}  finals: {ff}  tones: {tt}");
+    }
+
+    void AdvanceTurn(int steps)
+    {
+        if (turnOrder == null) return;
+        int idx = turnOrder.Advance(steps);
+        turn = idx;
+    }
+
+    void TriggerAutoTurnIfNeeded()
+    {
+        if (!playing || turnOrder == null || players.Count == 0) return;
+        var cur = CurrentPlayer;
+        if (cur != null && cur.kind == PlayerKind.Bot)
         {
-            if (match.by == "initial" && match.topReading != null)
-            {
-                string hiIni = match.topReading.initial ?? "";
-                for (int i=0;i<initialsRendered.Count;i++) if (initialsRendered[i]==hiIni) initialsRendered[i]=Hi(initialsRendered[i]);
-            }
-            else if ((match.by == "final" || match.by == "terminal") && match.topReading != null)
-            {
-                string hiFinal = match.by == "final" ? (match.topReading.final ?? "") : null;
-                string term = match.by == "terminal" ? match.terminalSymbol : null;
-                for (int i=0;i<finalsRendered.Count;i++)
-                {
-                    var f = finalsRendered[i];
-                    if (!string.IsNullOrEmpty(hiFinal) && f==hiFinal) finalsRendered[i]=Hi(f);
-                    else if (!string.IsNullOrEmpty(term) && !string.IsNullOrEmpty(f) && f.Contains(term))
-                    {
-                        int idx = f.LastIndexOf(term);
-                        finalsRendered[i] = idx>=0 ? f[..idx] + Hi(term) + f[(idx+term.Length)..] : f;
-                    }
-                }
-            }
-            else if (match.by == "tone" && match.topReading != null)
-            {
-                for (int i=0;i<tonesRendered.Count;i++)
-                {
-                    var tStr = tonesRendered[i];
-                    if (int.TryParse(tStr, out int t) && t == match.topReading.tone)
-                        tonesRendered[i] = Hi(tStr);
-                }
-            }
+            Invoke(nameof(BotTurn), 0.6f);
         }
-
-        string ii = initialsRendered.Count > 0 ? string.Join("/", initialsRendered) : "-";
-        string ff = finalsRendered.Count   > 0 ? string.Join("/", finalsRendered)   : "-";
-        string tt = tonesRendered.Count    > 0 ? string.Join("/", tonesRendered)    : "-";
-
-        if (topDetailText) topDetailText.SetText($"initials: {ii}   finals: {ff}   tones: {tt}");
     }
 
     string CardLabel(Card c) => c.type == CardType.Effect ? $"[{c.effect}]" : c.hanzi;
 
-    void SetMessage(string s) { if (messageText) messageText.SetText(s); }
+    void SetMessage(string s)
+    {
+        if (messageText) messageText.SetText(s);
+    }
+
+    // ----- Helper types -----
+
+    [System.Serializable]
+    class PlayerState
+    {
+        public PlayerKind kind;
+        public string displayName;
+        public HandPanel panel;
+        public List<Card> hand;
+
+        public PlayerState(PlayerKind kind, string displayName, HandPanel panel, List<Card> backingHand)
+        {
+            this.kind = kind;
+            this.displayName = displayName;
+            this.panel = panel;
+            this.hand = backingHand ?? new List<Card>();
+        }
+    }
+
+    class PlayerOrder
+    {
+        int playerCount;
+        public int CurrentIndex { get; private set; }
+        public int Direction { get; private set; } = 1; // 1 = clockwise, -1 = counter-clockwise
+
+        public PlayerOrder(int playerCount, int startingIndex = 0)
+        {
+            Reset(playerCount, startingIndex);
+        }
+
+        public void Reset(int playerCount, int startingIndex = 0)
+        {
+            this.playerCount = Mathf.Max(playerCount, 0);
+            if (this.playerCount == 0)
+            {
+                CurrentIndex = 0;
+            }
+            else
+            {
+                CurrentIndex = Mod(startingIndex, this.playerCount);
+            }
+        }
+
+        public int PeekOffset(int steps)
+        {
+            if (playerCount <= 0) return 0;
+            int raw = CurrentIndex + steps * Direction;
+            return Mod(raw, playerCount);
+        }
+
+        public int Advance(int steps = 1)
+        {
+            CurrentIndex = PeekOffset(steps);
+            return CurrentIndex;
+        }
+
+        public void Reverse()
+        {
+            Direction *= -1;
+        }
+
+        int Mod(int x, int m)
+        {
+            if (m == 0) return 0;
+            int r = x % m;
+            if (r < 0) r += m;
+            return r;
+        }
+    }
 }
