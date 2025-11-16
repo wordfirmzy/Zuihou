@@ -24,13 +24,13 @@ public class TurnManager : MonoBehaviour
 
     [Header("Controls & Messages")]
     public Button drawButton;
-    public TextMeshProUGUI messageText;
+    public TextMeshProUGUI messageText;     // now acts as a small log of recent events
 
     [Header("Tone Picker UI")]
     public TonePickerUI tonePicker; // assign the TonePickerPanel (with TonePickerUI)
 
     [Header("Agents")]
-    [Tooltip("Optional agent for the local human seat (seat 0).")]
+    [Tooltip("Agent for the local human seat (seat 0). Optional, but recommended.")]
     public LocalHumanAgent localHumanAgent;
 
     // ---- State ----
@@ -48,8 +48,13 @@ public class TurnManager : MonoBehaviour
 
     bool playing = false;
 
-    // Card under current top (used when an effect sits on top and there is no tone lock)
+    // Card that was on top immediately before the current top.
     Card previousTop = null;
+
+    // The most recent HANZI card that has been on the top of the discard.
+    // Used when one or more effect cards are stacked: matching should look
+    // through the effect stack down to this card.
+    Card lastHanziTop = null;
 
     RuleEngine.MatchContext lastMatchContext = null;
 
@@ -57,6 +62,10 @@ public class TurnManager : MonoBehaviour
     int pendingToneLock = 0;
 
     const string HILITE = "#21A0AA";
+
+    // Simple log of last few messages.
+    readonly List<string> logLines = new();
+    const int MaxLogLines = 8;
 
     // Convenience: who is currently active?
     PlayerState CurrentPlayer =>
@@ -83,6 +92,10 @@ public class TurnManager : MonoBehaviour
         // Clear backing hand lists
         playerHand.Clear();
         botHand.Clear();
+
+        // Clear log
+        logLines.Clear();
+        RefreshLogUI();
 
         // Build player list (currently: You + Bot, but ready for more seats)
         players.Clear();
@@ -114,40 +127,105 @@ public class TurnManager : MonoBehaviour
         }
 
         previousTop = null;
+        lastHanziTop = null;
         lastMatchContext = null;
         pendingToneLock = 0;
 
         var starter = deck.Draw();
         if (starter != null)
+        {
             deck.Play(starter);
+            if (starter.type == CardType.Hanzi)
+                lastHanziTop = starter;
+        }
 
         // Turn order: start at seat 0 (local human)
         turnOrder = new PlayerOrder(players.Count, 0);
         turn = turnOrder.CurrentIndex;
         playing = true;
 
+        SetMessage("New game started.");
         SetMessage("Your turn: play a matching card or Draw");
+
         RefreshUI();
         UpdateCenterUI();
     }
 
-    // ----- INPUT (local human) -----
+    // ----- NEW: central action handler -----
 
+    /// <summary>
+    /// Central entry point for player actions (local human now, network later).
+    /// This is what LocalHumanAgent calls, and DrawButton/TryPlayFromPlayer
+    /// now just wrap this.
+    /// </summary>
+    public void HandleAction(PlayerAction action)
+    {
+        if (!playing || turnOrder == null || players.Count == 0) return;
+
+        if (action.seatIndex < 0 || action.seatIndex >= players.Count)
+            return;
+
+        if (action.seatIndex != turnOrder.CurrentIndex)
+        {
+            // Not this player's turn; ignore. In future, you could queue or log this.
+            Debug.LogWarning($"HandleAction: seat {action.seatIndex} tried to act on seat {turnOrder.CurrentIndex}'s turn.");
+            return;
+        }
+
+        var actor = players[action.seatIndex];
+        if (actor.kind != PlayerKind.LocalHuman)
+        {
+            // For now, only local human uses PlayerAction. Bots still use BotTurn().
+            Debug.LogWarning("HandleAction: currently only local human actions are supported via PlayerAction.");
+            return;
+        }
+
+        switch (action.type)
+        {
+            case PlayerActionType.Draw:
+                ExecuteDraw(actor);
+                break;
+
+            case PlayerActionType.PlayCard:
+                ExecutePlay(actor, action.cardIndex);
+                break;
+        }
+    }
+
+    // ----- INPUT (wrappers for legacy UI wiring) -----
+
+    // If your Draw button is still wired to this in the inspector, it will keep working.
     public void DrawButton()
     {
-        if (!playing) return;
+        int seatIndex = turnOrder != null ? turnOrder.CurrentIndex : 0;
+        var action = PlayerAction.Draw(seatIndex);
+        HandleAction(action);
+    }
 
-        var current = CurrentPlayer;
-        if (current == null || current.kind != PlayerKind.LocalHuman) return;
+    // HandPanel still calls this via RefreshUI() if no LocalHumanAgent is assigned.
+    public void TryPlayFromPlayer(int index)
+    {
+        int seatIndex = turnOrder != null ? turnOrder.CurrentIndex : 0;
+        var action = PlayerAction.Play(seatIndex, index);
+        HandleAction(action);
+    }
+
+    // ----- INTERNAL EXECUTION (logic moved from old DrawButton/TryPlayFromPlayer) -----
+
+    void ExecuteDraw(PlayerState actor)
+    {
+        if (!playing) return;
+        if (actor == null) return;
 
         var c = deck.Draw();
-        if (c != null) current.hand.Add(c);
+        if (c != null) actor.hand.Add(c);
 
         // Drawing consumes & clears any constraint
         lastMatchContext = null;
         pendingToneLock = 0;
 
-        SetMessage("You drew a card.\nNext player's turn…");
+        string actorLabel = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+        SetMessage($"{actorLabel} drew a card.\nNext player's turn…");
 
         AdvanceTurn(1);
 
@@ -156,28 +234,26 @@ public class TurnManager : MonoBehaviour
         TriggerAutoTurnIfNeeded();
     }
 
-    public void TryPlayFromPlayer(int index)
+    void ExecutePlay(PlayerState actor, int handIndex)
     {
         if (!playing) return;
+        if (actor == null) return;
 
-        var current = CurrentPlayer;
-        if (current == null || current.kind != PlayerKind.LocalHuman) return;
+        var hand = actor.hand;
+        if (handIndex < 0 || handIndex >= hand.Count) return;
 
-        var hand = current.hand;
-        if (index < 0 || index >= hand.Count) return;
+        var card = hand[handIndex];
 
-        var card = hand[index];
-
-        // 1) Tone lock bypass: only check tone
+        // Tone lock bypass
         if (pendingToneLock > 0)
         {
             if (!RuleEngine.HasTone(card, pendingToneLock))
             {
-                SetMessage($"Tone lock: must play tone {pendingToneLock}.");
+                SetMessage($"Can't play {CardLabel(card)}: Tone lock requires tone {pendingToneLock}.");
                 return;
             }
 
-            var ctx = new RuleEngine.MatchContext
+            var ctxTone = new RuleEngine.MatchContext
             {
                 ok = true,
                 by = "tone",
@@ -185,18 +261,23 @@ public class TurnManager : MonoBehaviour
             };
 
             pendingToneLock = 0; // satisfied
-            ApplyPlay(current, index, card, ctx, deferTonePick: false);
+            string who = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+            SetMessage($"{who} played {CardLabel(card)} (satisfying tone lock {ctxTone.topReading.tone}).");
+
+            ApplyPlay(actor, handIndex, card, ctxTone, deferTonePick: false);
             return;
         }
 
-        // 2) Wild is always legal (if it’s your last card you win immediately; otherwise we’ll pick tone)
+        // Wild from a hand that still has other cards → allow and pick tone.
         if (card.type == CardType.Effect && card.effect == EffectType.WildToneSetter)
         {
-            ApplyPlay(current, index, card, null, deferTonePick: true);
+            string whoWild = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+            SetMessage($"{whoWild} played Wild.");
+            ApplyPlay(actor, handIndex, card, null, deferTonePick: true);
             return;
         }
 
-        // 3) Normal matching — but if an effect is on top and no tone lock, match against previousTop
+        // Normal matching — but if an effect is on top and no tone lock, match against deepest HANZI under effects
         var matchTarget = TopForMatching();
         var res = RuleEngine.CanPlayOn(matchTarget, card);
         if (!res.ok)
@@ -205,18 +286,23 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
-        ApplyPlay(current, index, card, res, deferTonePick: false);
+        // Successful non-effect play — log how it matched.
+        string who = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+        string by = string.IsNullOrEmpty(res.by) ? "rule" : res.by;
+        SetMessage($"{who} played {CardLabel(card)} (matched by {by}).");
+
+        ApplyPlay(actor, handIndex, card, res, deferTonePick: false);
     }
 
     // Which card should rules match against right now?
     Card TopForMatching()
     {
         var top = deck.Top;
-        if (top != null && top.type == CardType.Effect && pendingToneLock == 0)
+        if (pendingToneLock == 0 && top != null && top.type == CardType.Effect)
         {
-            // While an effect sits on top and no tone lock is active,
-            // match against the card under it.
-            return previousTop ?? top;
+            // FIX: handle stacked effects (Draw-2 on top of Draw-2 or Wild).
+            // We always match against the most recent HANZI that was on top.
+            return lastHanziTop ?? top;
         }
 
         return top;
@@ -229,14 +315,29 @@ public class TurnManager : MonoBehaviour
         if (actor == null) return;
 
         // Remember what was on the pile before this play
-        var top = deck.Top;
-        previousTop = top;
+        var oldTop = deck.Top;
+
+        previousTop = oldTop;
+
+        // Track the most recent HANZI top. If the old top was Hanzi, update;
+        // if the old top was an effect, leave lastHanziTop as-is (we want the
+        // deepest Hanzi under any number of stacked effects).
+        if (oldTop != null && oldTop.type == CardType.Hanzi)
+        {
+            lastHanziTop = oldTop;
+        }
 
         lastMatchContext = res;
 
         // Remove from hand and place onto discard
         actor.hand.RemoveAt(handIndex);
         deck.Play(card);
+
+        // If the newly played card is Hanzi, it becomes the latest Hanzi top.
+        if (card.type == CardType.Hanzi)
+        {
+            lastHanziTop = card;
+        }
 
         // ===== Immediate win checks before any deferred UI =====
         if (actor.hand.Count == 0)
@@ -276,17 +377,33 @@ public class TurnManager : MonoBehaviour
                     if (d2 != null) target.hand.Add(d2);
                 }
 
-                // Clear tone lock; subsequent matching will reference previousTop via TopForMatching()
+                // Clear tone lock; subsequent matching will reference lastHanziTop via TopForMatching()
                 pendingToneLock = 0;
 
                 skipNextSeat = true;
+
+                // Work out the tone of the Draw-2 for logging
+                int effectTone = 0;
+                if (res != null && res.playReading != null)
+                    effectTone = res.playReading.tone;
+                else
+                {
+                    foreach (var r in card.AllReadings())
+                    {
+                        effectTone = r.tone;
+                        break;
+                    }
+                }
 
                 string actorLabel = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
                 string targetLabel = (target != null && target.kind == PlayerKind.LocalHuman)
                     ? "You"
                     : target?.displayName ?? "Next player";
 
-                SetMessage($"{actorLabel} played Draw-2.\n{targetLabel} drew 2 and was skipped.");
+                if (effectTone > 0)
+                    SetMessage($"{actorLabel} played Draw-2 (tone {effectTone}).\n{targetLabel} drew 2 and was skipped.");
+                else
+                    SetMessage($"{actorLabel} played Draw-2.\n{targetLabel} drew 2 and was skipped.");
             }
             else if (card.effect == EffectType.WildToneSetter)
             {
@@ -305,7 +422,7 @@ public class TurnManager : MonoBehaviour
                             if (drawButton) drawButton.interactable = true;
                             if (playerHandPanel) playerHandPanel.SetInteractable(true);
 
-                            SetMessage($"Tone set to {pendingToneLock}.\nNext player must play tone {pendingToneLock}.");
+                            SetMessage($"You set tone lock to {pendingToneLock}.\nNext player must play tone {pendingToneLock}.");
 
                             AdvanceTurn(1);
                             RefreshUI();
@@ -321,7 +438,7 @@ public class TurnManager : MonoBehaviour
                     {
                         // Fallback if picker not wired
                         pendingToneLock = 1;
-                        SetMessage($"(No tone picker wired) Tone set to 1.");
+                        SetMessage($"(No tone picker wired) Tone lock set to 1.");
                     }
                 }
                 else if (actor.kind == PlayerKind.Bot)
@@ -329,7 +446,7 @@ public class TurnManager : MonoBehaviour
                     // Bot wild → choose tone heuristically
                     int t = ChooseBotTone(actor.hand);
                     pendingToneLock = (t >= 1 && t <= 4) ? t : 1;
-                    SetMessage($"Bot set tone to {pendingToneLock}.\nYou must play tone {pendingToneLock}.");
+                    SetMessage($"Bot set tone lock to {pendingToneLock}.\nYou must play tone {pendingToneLock}.");
                 }
             }
         }
@@ -375,6 +492,7 @@ public class TurnManager : MonoBehaviour
                     };
 
                     pendingToneLock = 0;
+                    SetMessage($"Bot played {CardLabel(c)} (satisfying tone lock {ctx.topReading.tone}).");
                     ApplyPlay(actor, i, c, ctx, deferTonePick: false);
                     return;
                 }
@@ -385,7 +503,7 @@ public class TurnManager : MonoBehaviour
             if (d != null) botHandLocal.Add(d);
             pendingToneLock = 0;
 
-            SetMessage("Bot drew (tone lock).\nNext player's turn.");
+            SetMessage("Bot drew (no card matched the tone lock).\nNext player's turn.");
             AdvanceTurn(1);
 
             RefreshUI();
@@ -418,6 +536,7 @@ public class TurnManager : MonoBehaviour
             var c = botHandLocal[i];
             if (c.type == CardType.Effect && c.effect == EffectType.WildToneSetter)
             {
+                SetMessage("Bot played Wild.");
                 ApplyPlay(actor, i, c, new RuleEngine.MatchContext
                 {
                     ok = true,
@@ -437,6 +556,9 @@ public class TurnManager : MonoBehaviour
             var res = RuleEngine.CanPlayOn(matchTarget, c);
             if (res.ok)
             {
+                string who = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+                string by = string.IsNullOrEmpty(res.by) ? "rule" : res.by;
+                SetMessage($"Bot played {CardLabel(c)} (matched by {by}).");
                 ApplyPlay(actor, i, c, res, deferTonePick: false);
                 return;
             }
@@ -487,7 +609,20 @@ public class TurnManager : MonoBehaviour
     void RefreshUI()
     {
         // Seat 0 is the local player in current setup
-        playerHandPanel?.Render(playerHand, i => TryPlayFromPlayer(i));
+        if (playerHandPanel != null)
+        {
+            if (localHumanAgent != null)
+            {
+                // Route clicks through the agent, which sends PlayerActions.
+                playerHandPanel.Render(playerHand, idx => localHumanAgent.OnCardClicked(idx));
+            }
+            else
+            {
+                // Fallback: old direct path
+                playerHandPanel.Render(playerHand, idx => TryPlayFromPlayer(idx));
+            }
+        }
+
         botHandPanel?.RenderFaceDown(botHand.Count);
 
         if (drawButton)
@@ -501,7 +636,7 @@ public class TurnManager : MonoBehaviour
 
     void UpdateCenterUI()
     {
-        // Previous
+        // Previous (just the immediate previous top, for visual context)
         if (discardPreviousView)
         {
             if (previousTop != null)
@@ -568,9 +703,11 @@ public class TurnManager : MonoBehaviour
                         break;
                     }
 
-                    // Be explicit that matching compares against previous while an effect is on top.
-                    var prevLabel = previousTop != null
-                        ? $" (matching against previous: {previousTop.hanzi})"
+                    // Show which HANZI we're matching against, even if multiple
+                    // effects are stacked.
+                    Card matchCard = lastHanziTop;
+                    string prevLabel = matchCard != null
+                        ? $" (matching against: {matchCard.hanzi})"
                         : "";
 
                     topDetailText.SetText($"Top: Draw-2 {(t >= 1 && t <= 4 ? $"(tone {t})" : "")}{prevLabel}");
@@ -617,8 +754,7 @@ public class TurnManager : MonoBehaviour
         var cur = CurrentPlayer;
         if (cur != null && cur.agent != null)
         {
-            // Keep the small delay so the bot (or any automated agent)
-            // doesn't feel completely instant.
+            // Keep the small delay so an automated agent (bot) doesn't feel too instant.
             Invoke(nameof(InvokeAgentForCurrentPlayer), 0.6f);
         }
     }
@@ -636,9 +772,25 @@ public class TurnManager : MonoBehaviour
     string CardLabel(Card c) =>
         c.type == CardType.Effect ? $"[{c.effect}]" : c.hanzi;
 
-    void SetMessage(string s)
+    // ----- Logging helpers -----
+
+    void SetMessage(string s) => AppendLogLine(s);
+
+    void AppendLogLine(string s)
     {
-        if (messageText) messageText.SetText(s);
+        if (string.IsNullOrEmpty(s)) return;
+
+        logLines.Add(s);
+        if (logLines.Count > MaxLogLines)
+            logLines.RemoveAt(0);
+
+        RefreshLogUI();
+    }
+
+    void RefreshLogUI()
+    {
+        if (!messageText) return;
+        messageText.SetText(string.Join("\n", logLines));
     }
 
     // ----- Helper types -----
