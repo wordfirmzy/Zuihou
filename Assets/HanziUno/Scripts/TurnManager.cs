@@ -287,9 +287,9 @@ public class TurnManager : MonoBehaviour
         }
 
         // Successful non-effect play — log how it matched.
-        string who = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+        string whoLabel = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
         string by = string.IsNullOrEmpty(res.by) ? "rule" : res.by;
-        SetMessage($"{who} played {CardLabel(card)} (matched by {by}).");
+        SetMessage($"{whoLabel} played {CardLabel(card)} (matched by {by}).");
 
         ApplyPlay(actor, handIndex, card, res, deferTonePick: false);
     }
@@ -556,7 +556,7 @@ public class TurnManager : MonoBehaviour
             var res = RuleEngine.CanPlayOn(matchTarget, c);
             if (res.ok)
             {
-                string who = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
+                string who = actor.displayName;
                 string by = string.IsNullOrEmpty(res.by) ? "rule" : res.by;
                 SetMessage($"Bot played {CardLabel(c)} (matched by {by}).");
                 ApplyPlay(actor, i, c, res, deferTonePick: false);
