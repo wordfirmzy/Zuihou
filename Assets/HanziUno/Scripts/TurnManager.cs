@@ -29,13 +29,17 @@ public class TurnManager : MonoBehaviour
     [Header("Tone Picker UI")]
     public TonePickerUI tonePicker; // assign the TonePickerPanel (with TonePickerUI)
 
+    [Header("Agents")]
+    [Tooltip("Optional agent for the local human seat (seat 0).")]
+    public LocalHumanAgent localHumanAgent;
+
     // ---- State ----
-    // These two lists are kept for backwards-compatibility and are used as the backing
-    // hand lists for the first two PlayerState entries (You + Bot).
+
+    // Backing hand lists for first two seats (You + Bot).
     public List<Card> playerHand = new();
     public List<Card> botHand = new();
 
-    // Generic multi-player model (up to 7 later)
+    // Generic multi-player model
     List<PlayerState> players = new();
     PlayerOrder turnOrder;
 
@@ -56,7 +60,10 @@ public class TurnManager : MonoBehaviour
 
     // Convenience: who is currently active?
     PlayerState CurrentPlayer =>
-        (turnOrder != null && players.Count > 0 && turnOrder.CurrentIndex >= 0 && turnOrder.CurrentIndex < players.Count)
+        (turnOrder != null &&
+         players.Count > 0 &&
+         turnOrder.CurrentIndex >= 0 &&
+         turnOrder.CurrentIndex < players.Count)
             ? players[turnOrder.CurrentIndex]
             : null;
 
@@ -79,8 +86,22 @@ public class TurnManager : MonoBehaviour
 
         // Build player list (currently: You + Bot, but ready for more seats)
         players.Clear();
-        players.Add(new PlayerState(PlayerKind.LocalHuman, "You", playerHandPanel, playerHand));
-        players.Add(new PlayerState(PlayerKind.Bot, "Bot",  botHandPanel,  botHand));
+
+        // Seat 0: local human
+        players.Add(new PlayerState(
+            PlayerKind.LocalHuman,
+            "You",
+            playerHandPanel,
+            playerHand,
+            agent: localHumanAgent));
+
+        // Seat 1: bot
+        players.Add(new PlayerState(
+            PlayerKind.Bot,
+            "Bot",
+            botHandPanel,
+            botHand,
+            agent: new BotAgent()));
 
         // Deal starting hands: 8 cards per player
         for (int i = 0; i < 8; i++)
@@ -97,7 +118,8 @@ public class TurnManager : MonoBehaviour
         pendingToneLock = 0;
 
         var starter = deck.Draw();
-        if (starter != null) deck.Play(starter);
+        if (starter != null)
+            deck.Play(starter);
 
         // Turn order: start at seat 0 (local human)
         turnOrder = new PlayerOrder(players.Count, 0);
@@ -109,11 +131,12 @@ public class TurnManager : MonoBehaviour
         UpdateCenterUI();
     }
 
-    // ----- INPUT -----
+    // ----- INPUT (local human) -----
 
     public void DrawButton()
     {
         if (!playing) return;
+
         var current = CurrentPlayer;
         if (current == null || current.kind != PlayerKind.LocalHuman) return;
 
@@ -136,6 +159,7 @@ public class TurnManager : MonoBehaviour
     public void TryPlayFromPlayer(int index)
     {
         if (!playing) return;
+
         var current = CurrentPlayer;
         if (current == null || current.kind != PlayerKind.LocalHuman) return;
 
@@ -194,6 +218,7 @@ public class TurnManager : MonoBehaviour
             // match against the card under it.
             return previousTop ?? top;
         }
+
         return top;
     }
 
@@ -257,7 +282,10 @@ public class TurnManager : MonoBehaviour
                 skipNextSeat = true;
 
                 string actorLabel = actor.kind == PlayerKind.LocalHuman ? "You" : actor.displayName;
-                string targetLabel = (target != null && target.kind == PlayerKind.LocalHuman) ? "You" : target?.displayName ?? "Next player";
+                string targetLabel = (target != null && target.kind == PlayerKind.LocalHuman)
+                    ? "You"
+                    : target?.displayName ?? "Next player";
+
                 SetMessage($"{actorLabel} played Draw-2.\n{targetLabel} drew 2 and was skipped.");
             }
             else if (card.effect == EffectType.WildToneSetter)
@@ -296,8 +324,9 @@ public class TurnManager : MonoBehaviour
                         SetMessage($"(No tone picker wired) Tone set to 1.");
                     }
                 }
-                else if (actor.kind == PlayerKind.Bot) // Bot wild → choose tone heuristically
+                else if (actor.kind == PlayerKind.Bot)
                 {
+                    // Bot wild → choose tone heuristically
                     int t = ChooseBotTone(actor.hand);
                     pendingToneLock = (t >= 1 && t <= 4) ? t : 1;
                     SetMessage($"Bot set tone to {pendingToneLock}.\nYou must play tone {pendingToneLock}.");
@@ -318,7 +347,10 @@ public class TurnManager : MonoBehaviour
 
     // ----- BOT -----
 
-    void BotTurn()
+    /// <summary>
+    /// Core bot-turn logic. Public so BotAgent can call it via IPlayerAgent.
+    /// </summary>
+    public void BotTurn()
     {
         if (!playing || turnOrder == null || players.Count == 0) return;
 
@@ -341,6 +373,7 @@ public class TurnManager : MonoBehaviour
                         by = "tone",
                         topReading = new Reading("", "", pendingToneLock)
                     };
+
                     pendingToneLock = 0;
                     ApplyPlay(actor, i, c, ctx, deferTonePick: false);
                     return;
@@ -425,19 +458,26 @@ public class TurnManager : MonoBehaviour
     {
         // simple heuristic: most frequent tone in this bot's hand (fallback 1)
         var counts = new int[6];
+
         foreach (var c in hand)
+        {
             foreach (var r in c.AllReadings())
+            {
                 if (r.tone >= 1 && r.tone <= 4)
                     counts[r.tone]++;
+            }
+        }
 
         int best = 1;
         int bestC = -1;
         for (int t = 1; t <= 4; t++)
+        {
             if (counts[t] > bestC)
             {
                 bestC = counts[t];
                 best = t;
             }
+        }
 
         return best;
     }
@@ -453,7 +493,9 @@ public class TurnManager : MonoBehaviour
         if (drawButton)
         {
             var cur = CurrentPlayer;
-            drawButton.interactable = playing && cur != null && cur.kind == PlayerKind.LocalHuman;
+            drawButton.interactable = playing &&
+                                      cur != null &&
+                                      cur.kind == PlayerKind.LocalHuman;
         }
     }
 
@@ -462,22 +504,28 @@ public class TurnManager : MonoBehaviour
         // Previous
         if (discardPreviousView)
         {
-            if (previousTop != null) discardPreviousView.Bind(previousTop, -1, null);
-            else                     discardPreviousView.BindFaceDown(-1);
+            if (previousTop != null)
+                discardPreviousView.Bind(previousTop, -1, null);
+            else
+                discardPreviousView.BindFaceDown(-1);
 
             var cgPrev = discardPreviousView.GetComponent<CanvasGroup>();
-            if (cgPrev) cgPrev.alpha = previousTop != null ? 0.6f : 0f;
+            if (cgPrev)
+                cgPrev.alpha = previousTop != null ? 0.6f : 0f;
         }
 
         // Current
         var top = deck.Top;
         if (discardCurrentView)
         {
-            if (top != null) discardCurrentView.Bind(top, -1, null);
-            else             discardCurrentView.BindFaceDown(-1);
+            if (top != null)
+                discardCurrentView.Bind(top, -1, null);
+            else
+                discardCurrentView.BindFaceDown(-1);
 
             var cgTop = discardCurrentView.GetComponent<CanvasGroup>();
-            if (cgTop) cgTop.alpha = 1f;
+            if (cgTop)
+                cgTop.alpha = 1f;
         }
 
         // Details
@@ -490,13 +538,20 @@ public class TurnManager : MonoBehaviour
         if (matchRuleText)
         {
             if (pendingToneLock > 0)
+            {
                 matchRuleText.SetText($"Tone lock: {pendingToneLock}");
+            }
             else if (match != null && match.ok && !string.IsNullOrEmpty(match.by))
-                matchRuleText.SetText(match.by == "terminal" && !string.IsNullOrEmpty(match.terminalSymbol)
-                    ? $"Matched by: {match.by} ({match.terminalSymbol})"
-                    : $"Matched by: {match.by}");
+            {
+                if (match.by == "terminal" && !string.IsNullOrEmpty(match.terminalSymbol))
+                    matchRuleText.SetText($"Matched by: {match.by} ({match.terminalSymbol})");
+                else
+                    matchRuleText.SetText($"Matched by: {match.by}");
+            }
             else
+            {
                 matchRuleText.SetText("");
+            }
         }
 
         // Top card details
@@ -507,9 +562,17 @@ public class TurnManager : MonoBehaviour
                 if (top.effect == EffectType.DrawTwoToneLinked)
                 {
                     int t = 0;
-                    foreach (var r in top.AllReadings()) { t = r.tone; break; }
+                    foreach (var r in top.AllReadings())
+                    {
+                        t = r.tone;
+                        break;
+                    }
+
                     // Be explicit that matching compares against previous while an effect is on top.
-                    var prevLabel = previousTop != null ? $" (matching against previous: {previousTop.hanzi})" : "";
+                    var prevLabel = previousTop != null
+                        ? $" (matching against previous: {previousTop.hanzi})"
+                        : "";
+
                     topDetailText.SetText($"Top: Draw-2 {(t >= 1 && t <= 4 ? $"(tone {t})" : "")}{prevLabel}");
                 }
                 else
@@ -517,13 +580,16 @@ public class TurnManager : MonoBehaviour
                     topDetailText.SetText("Top: Wild (set tone)");
                 }
             }
+
             return;
         }
 
         // Default (hanzi or empty)
         if (top == null)
         {
-            if (topDetailText) topDetailText.SetText("initials: -  finals: -  tones: -");
+            if (topDetailText)
+                topDetailText.SetText("initials: -  finals: -  tones: -");
+
             return;
         }
 
@@ -533,7 +599,8 @@ public class TurnManager : MonoBehaviour
         string ff = fins.Count > 0 ? string.Join("/", fins) : "-";
         string tt = tones.Count > 0 ? string.Join("/", tones) : "-";
 
-        if (topDetailText) topDetailText.SetText($"initials: {ii}  finals: {ff}  tones: {tt}");
+        if (topDetailText)
+            topDetailText.SetText($"initials: {ii}  finals: {ff}  tones: {tt}");
     }
 
     void AdvanceTurn(int steps)
@@ -546,14 +613,28 @@ public class TurnManager : MonoBehaviour
     void TriggerAutoTurnIfNeeded()
     {
         if (!playing || turnOrder == null || players.Count == 0) return;
+
         var cur = CurrentPlayer;
-        if (cur != null && cur.kind == PlayerKind.Bot)
+        if (cur != null && cur.agent != null)
         {
-            Invoke(nameof(BotTurn), 0.6f);
+            // Keep the small delay so the bot (or any automated agent)
+            // doesn't feel completely instant.
+            Invoke(nameof(InvokeAgentForCurrentPlayer), 0.6f);
         }
     }
 
-    string CardLabel(Card c) => c.type == CardType.Effect ? $"[{c.effect}]" : c.hanzi;
+    void InvokeAgentForCurrentPlayer()
+    {
+        if (!playing || turnOrder == null || players.Count == 0) return;
+
+        var cur = CurrentPlayer;
+        if (cur == null || cur.agent == null) return;
+
+        cur.agent.OnTurnStarted(this, turnOrder.CurrentIndex);
+    }
+
+    string CardLabel(Card c) =>
+        c.type == CardType.Effect ? $"[{c.effect}]" : c.hanzi;
 
     void SetMessage(string s)
     {
@@ -569,19 +650,26 @@ public class TurnManager : MonoBehaviour
         public string displayName;
         public HandPanel panel;
         public List<Card> hand;
+        public IPlayerAgent agent;
 
-        public PlayerState(PlayerKind kind, string displayName, HandPanel panel, List<Card> backingHand)
+        public PlayerState(PlayerKind kind,
+                           string displayName,
+                           HandPanel panel,
+                           List<Card> backingHand,
+                           IPlayerAgent agent)
         {
             this.kind = kind;
             this.displayName = displayName;
             this.panel = panel;
             this.hand = backingHand ?? new List<Card>();
+            this.agent = agent;
         }
     }
 
     class PlayerOrder
     {
         int playerCount;
+
         public int CurrentIndex { get; private set; }
         public int Direction { get; private set; } = 1; // 1 = clockwise, -1 = counter-clockwise
 
