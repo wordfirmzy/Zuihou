@@ -298,11 +298,19 @@ public class TurnManager : MonoBehaviour
     Card TopForMatching()
     {
         var top = deck.Top;
+
         if (pendingToneLock == 0 && top != null && top.type == CardType.Effect)
         {
-            // FIX: handle stacked effects (Draw-2 on top of Draw-2 or Wild).
-            // We always match against the most recent HANZI that was on top.
-            return lastHanziTop ?? top;
+            // If we've already had at least one HANZI on top, always match
+            // against that HANZI (handles stacked Draw-2 / Wild).
+            if (lastHanziTop != null)
+                return lastHanziTop;
+
+            // IMPORTANT FIX:
+            // If an effect is the very first card (no Hanzi has ever been played),
+            // treat it as if there is *no* top card. That way the first real Hanzi
+            // behaves like a normal starter and any matching rule can apply.
+            return null;
         }
 
         return top;
