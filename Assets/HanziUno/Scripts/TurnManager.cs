@@ -7,11 +7,15 @@ public enum PlayerKind
 {
     LocalHuman,
     Bot,
-    RemoteHuman   // for future networked seats; actions come from network, not from BotTurn/LocalHumanAgent
+    RemoteHuman   // for future networked seats; actions come from network
 }
 
 public class TurnManager : MonoBehaviour
 {
+    [Header("Startup")]
+    [Tooltip("If true, a game is started automatically in Start() using the current seatConfigs. Disable if a lobby will call NewGame() manually.")]
+    public bool autoStart = true;
+
     [Header("Center / Discard")]
     public CardView discardCurrentView;
     public CardView discardPreviousView;
@@ -25,7 +29,7 @@ public class TurnManager : MonoBehaviour
 
     [Header("Controls & Messages")]
     public Button drawButton;
-    public TextMeshProUGUI messageText;     // now acts as a small log of recent events
+    public TextMeshProUGUI messageText;     // small log of recent events
 
     [Header("Tone Picker UI")]
     public TonePickerUI tonePicker; // assign the TonePickerPanel (with TonePickerUI)
@@ -68,11 +72,8 @@ public class TurnManager : MonoBehaviour
     // When >0, the NEXT player must play a card that has this tone (bypasses normal matching)
     int pendingToneLock = 0;
 
-    const string HILITE = "#21A0AA";
-
-    // Simple log of last few messages.
-    readonly List<string> logLines = new();
     const int MaxLogLines = 8;
+    readonly List<string> logLines = new();
 
     // Convenience: who is currently active?
     PlayerState CurrentPlayer =>
@@ -86,7 +87,26 @@ public class TurnManager : MonoBehaviour
     // Index of the local human seat in players list (if any).
     int localSeatIndex = 0;
 
-    void Start() => NewGame();
+    void Start()
+    {
+        // If the menu scene passed us a seat configuration, use it.
+        if (SeatConfigPayload.Seats != null && SeatConfigPayload.Seats.Length > 0)
+        {
+            ConfigureSeats(SeatConfigPayload.Seats);
+            SeatConfigPayload.Seats = null; // clear so it doesn't leak into future games
+        }
+
+        if (autoStart)
+            NewGame();
+    }
+
+    /// <summary>
+    /// Allow an external setup script to configure seat definitions before NewGame().
+    /// </summary>
+    public void ConfigureSeats(SeatConfig[] configs)
+    {
+        seatConfigs = configs;
+    }
 
     public void NewGame()
     {
@@ -159,7 +179,6 @@ public class TurnManager : MonoBehaviour
         players.Clear();
         localSeatIndex = 0;
 
-        // Determine seat count and config
         const int MinSeats = 3;
         const int MaxSeats = 7;
 
@@ -604,8 +623,7 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
-        // Try each candidate with proper TopForMatching(card) logic
-        // 1) Draw-2
+        // Try Draw-2
         for (int i = 0; i < botHandLocal.Count; i++)
         {
             var c = botHandLocal[i];
@@ -621,7 +639,7 @@ public class TurnManager : MonoBehaviour
             }
         }
 
-        // 2) Wild
+        // Try Wild
         for (int i = 0; i < botHandLocal.Count; i++)
         {
             var c = botHandLocal[i];
@@ -638,7 +656,7 @@ public class TurnManager : MonoBehaviour
             }
         }
 
-        // 3) Any legal Hanzi
+        // Any legal Hanzi
         for (int i = 0; i < botHandLocal.Count; i++)
         {
             var c = botHandLocal[i];
@@ -862,8 +880,6 @@ public class TurnManager : MonoBehaviour
 
     string CardLabel(Card c) =>
         c.type == CardType.Effect ? $"[{c.effect}]" : c.hanzi;
-
-    // ----- Logging helpers -----
 
     void SetMessage(string s) => AppendLogLine(s);
 

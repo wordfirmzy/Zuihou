@@ -1120,6 +1120,7 @@ GameObject:
   - component: {fileID: 240690369}
   - component: {fileID: 240690368}
   - component: {fileID: 240690370}
+  - component: {fileID: 240690371}
   m_Layer: 0
   m_Name: GameRoot
   m_TagString: Untagged
@@ -1237,6 +1238,16 @@ MonoBehaviour:
   drawButton: {fileID: 692555227}
   messageText: {fileID: 1992998941}
   tonePicker: {fileID: 405801556}
+  localHumanAgent: {fileID: 240690371}
+  seatConfigs:
+  - displayName: 0
+    kind: 0
+  - displayName: 1
+    kind: 1
+  - displayName: 2
+    kind: 1
+  - displayName: 3
+    kind: 1
   playerHand: []
   botHand: []
   turn: 0
@@ -1262,6 +1273,20 @@ MonoBehaviour:
   volumeValueLabel: {fileID: 904478492}
   qualityDropdown: {fileID: 1887893551}
   pauseWhenOpen: 1
+--- !u!114 &240690371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 240690362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c306e7592b8334dbc161d07877e4cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalHumanAgent
+  game: {fileID: 240690369}
+  seatIndex: 0
 --- !u!1 &241547093
 GameObject:
   m_ObjectHideFlags: 0
@@ -2855,9 +2880,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 240690369}
-        m_TargetAssemblyTypeName: TurnManager, Assembly-CSharp
-        m_MethodName: DrawButton
+      - m_Target: {fileID: 240690371}
+        m_TargetAssemblyTypeName: LocalHumanAgent, Assembly-CSharp
+        m_MethodName: OnDrawClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
